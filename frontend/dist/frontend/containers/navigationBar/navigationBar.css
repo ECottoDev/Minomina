@@ -1,0 +1,61 @@
+.navigationBar_view {
+    display: grid;
+    grid-gap:1rem;
+}
+
+.navigationBar_homeIcon {
+    grid-area: 1/1/1/1;
+    height: 5rem;
+    width: 7rem;
+    cursor: pointer;
+    fill: var(--theme_color_icons);
+}
+
+.navigationBar_homeIcon:hover {
+    fill: var(--red);
+    transition: none;
+}
+
+.navigationBar_webPageIcon {
+    grid-area: 1/2/1/2;
+    height: 5rem;
+    width: 7rem;
+    margin-left: 2rem;
+    cursor: pointer;
+    fill: none;
+    stroke: var(--theme_color_icons);
+    stroke-width: 0.5rem;
+}
+
+.navigationBar_webPageIcon:hover {
+    stroke: var(--red);
+    transition: none;
+}
+
+.navigationBar_brandText {
+    grid-area: 2/2/2/2;
+}
+
+.navigationBar_homeText {
+    justify-self: center;
+    grid-area: 2/1/2/1;
+
+}
+.navigationBar_polyPageIcon {
+    grid-area: 1/3/1/3;
+    height: 5rem;
+    width: 7rem;
+    cursor: pointer;
+    margin-left:3rem;
+    fill: none;
+    stroke: var(--theme_color_icons);
+    stroke-width: 0.5rem;
+}
+.navigationBar_polyPageIcon:hover {
+    stroke: var(--red);
+    transition: none;
+}
+
+.navigationBar_polyText {
+    grid-area: 2/3/2/3;
+}

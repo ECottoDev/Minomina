@@ -1,0 +1,4 @@
+@import "../components/displayBox/displayBox.css";
+@import "../components/checkbox/checkbox.css";
+@import "../components/tiles/instanceTiles/instanceTiles.css";
+@import "../components/tiles/statusTiles/statusTiles.css";

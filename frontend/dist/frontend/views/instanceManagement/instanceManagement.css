@@ -1,0 +1,71 @@
+/* CSS for rotating the loading image */
+.instanceManagement_loading {
+  display: block; /* Ensures the image is displayed as a block-level element */
+  margin: auto; /* Center the image horizontally if needed */
+  width: 50px; /* Set a specific width (adjust as necessary) */
+  height: 50px; /* Set a specific height (adjust as necessary) */
+  animation: spin 1s linear infinite; /* Apply the spin animation */
+}
+
+/* Define the spin animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start from 0 degrees */
+  }
+  100% {
+    transform: rotate(360deg); /* Rotate to 360 degrees */
+  }
+}
+
+.instanceManagement_columnTitles {
+  display: grid;
+  /*column-gap: 15rem;*/
+  width: auto;
+  padding-right: 2rem;
+  grid-template-columns: 1fr 1fr auto;
+}
+.instanceManagement_instanceNameText {
+  grid-area: 3/1/3/1;
+  margin-left: 1rem;
+}
+
+.instanceManagement_logoutButton{
+  grid-area: 1/1/1/1;
+  margin-left: 1rem;
+  font-size:1.5rem;
+}
+.instanceManagement_refreshButton{
+  grid-area: 1/2/1/2;
+  margin-left: 1rem;
+  font-size:1.5rem;
+  width: 13rem
+}
+.instanceManagement_stateText {
+  grid-area: 3/2/3/2;
+  margin-left: 10rem;
+}
+
+.instanceManagement_lastTimeUpdate{
+  grid-area: 1/3/1/3;
+  font-size: 1.5rem;
+  align-self: center;
+}
+/*.instanceManagement_reachableText {*/
+/*  grid-area: 1/3/1/3;*/
+/*}*/
+.instanceManagement_subContainer{
+  padding: 0.5rem;
+  display: flex;
+  grid-area: 2/1/2/4;
+  margin-left: 1rem;
+  
+}
+.instanceManagement_subText{
+  font-size: 1.3rem;
+  width: 26rem;
+  align-self: center
+}
+.instanceManagement_subButton{
+  margin-left:1rem;
+  font-size:1.5rem;
+}

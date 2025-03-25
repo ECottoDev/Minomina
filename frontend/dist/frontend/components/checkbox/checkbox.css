@@ -1,0 +1,58 @@
+.checkbox__view {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox__view>* {
+    cursor: pointer;
+    accent-color: rgb(0, 160, 0);
+}
+
+.checkbox__view-smaller {
+    font-size: 1rem;
+}
+
+.checkbox__view-small {
+    font-size: 1.2rem;
+}
+
+.checkbox__view-medium {
+    font-size: 1.6rem;
+}
+
+.checkbox__view-large {
+    font-size: 1.8rem;
+}
+
+.checkbox__view-larger {
+    font-size: 2.4rem;
+}
+
+.checkbox__checkbox-smaller {
+    width: 0.6rem;
+    height: 0.6rem;
+}
+
+.checkbox__checkbox-small {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.checkbox__checkbox-medium {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.checkbox__checkbox-large {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.checkbox__checkbox-larger {
+    width: 2rem;
+    height: 2rem;
+}
+
+.checkbox__label {
+    color: var(--dark_grey);
+}

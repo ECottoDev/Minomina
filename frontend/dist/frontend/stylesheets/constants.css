@@ -1,0 +1,171 @@
+* {
+    /* The styles set here apply to every class */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: transparent;
+    background-color: transparent;
+    color: var(--darkest_grey);
+    transition: all ease-in-out .5s;
+}
+
+body {
+    background: var(--background_color);
+}
+
+#root {
+    position: relative;
+    overflow: hidden;
+}
+
+*:focus {
+    /* Prevent blue square when focused */
+    outline: none;
+}
+
+:root {
+    /* Colors */
+    --background_color: rgb(250, 250, 250);
+    --backdrop_color: rgb(255, 255, 255);
+    --theme_color: rgb(139, 0, 0);
+    --light_theme_color: rgb(153, 115, 104);
+    --theme_color-translucent: rgba(64, 111, 113, 0.15);
+    --grey: rgb(140, 140, 140);
+    --dark_grey: rgb(100, 100, 100);
+    --darker_grey: rgb(75, 75, 75);
+    --darkest_grey: rgb(25, 25, 25);
+    --light_grey: rgb(210, 210, 210);
+    --lighter_grey: rgb(230, 230, 230);
+    --lightest_grey: rgb(250, 250, 250);
+    --white: rgb(255, 255, 255);
+    --black: rgb(0, 0, 0);
+    --blue: rgb(0, 113, 188);
+    --green: rgb(158, 173, 87);
+    --green-translucent: rgba(158, 173, 87, .3);
+    --kelp: rgb(64, 67, 49);
+    --light_green: rgb(220, 230, 220);
+    --red: red;
+    --dark_red: rgb(139, 0, 0);
+    --orange: rgb(224, 167, 52);
+    --light_red: rgb(230, 200, 200);
+    --fadeInColor-lighter: rgba(0, 0, 0, .05);
+    --fadeInColor-light: rgba(0, 0, 0, .1);
+    --fadeInColor: rgba(0, 0, 0, .2);
+    --linkColor: #0000EE;
+    /* Fonts */
+    --font: 'Ubuntu-Light', sans-serif;
+    --font-bold: 'Ubuntu-Regular', sans-serif;
+    /* Box Shadow */
+    --box-shadow: .1rem .1rem .8rem .1rem rgba(0, 0, 0, .1);
+    --box-shadow-hover: 0 .8rem 1.6rem 0 rgba(0, 0, 0, 0.2);
+    --box-shadow-hover-far: 0 .0rem .8rem .1rem rgba(0, 0, 0, 0.3);
+    --box-shadow-inset: inset 0 .1rem .1rem rgba(0, 0, 0, 0.075);
+    /* Borders */
+    --default_border: .1rem solid var(--borderColor);
+    --default_border_color: var(--lighter_grey);
+    --borderColor: rgb(230, 230, 230);
+    --oval_border_radius: 6.25rem;
+    --roundBorder: 50%;
+    --rounder_border_radius: 1rem;
+    --rounded_border_radius: .6rem;
+    --semi_rounded_border_radius: .4rem;
+    /* Shapes */
+    --sphere: radial-gradient(circle 7.0rem at 0 0, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), rgba(0, 0, 0, .8)), radial-gradient(circle 1.5rem at .5rem .1rem, rgba(255, 255, 255, .7), rgba(0, 0, 0, 0));
+    /* Margins */
+    --tiles_margin: 1rem 2rem;
+    --tiles_margin-vertical: 1rem 0;
+    /* Menu Pillbox */
+    --menu_pillbox-width: 20rem;
+    --menu_pillbox-height: 30rem;
+    /* Expandables */
+    --expand: scale(1.2);
+    /* Display Dialog */
+    --dialog_margin: 8rem auto auto;
+    /* Labels */
+    --label-smaller: 1rem;
+    --label-small: 1.2rem;
+    --label-medium: 1.6rem;
+    --label-large: 1.8rem;
+    --label-larger: 2.2rem;
+    --label-largest: 2.4rem;
+    --dark_grey_icons: var(--dark_grey);
+    --dark_grey_font: var(--dark_grey);
+    --theme_color_font: var(--theme_color);
+    --pillBox_border: 1px solid var(--pillBox_border_color);
+    --pillBox_border_color: #f2f2f2;
+    --input_border_color: #ccc;
+    --search_bar_icon: url('frontend/assets/icons/Search.svg');
+    --input_color: var(--dark_grey_font);
+    --tile_fill: white;
+    --theme_color_icons: rgb(182, 52, 52);
+    --time_input_icon: url('frontend/assets/icons/Clock.svg');
+    --theme_color_toggle_heading_color: var(--theme_color);
+    --toggle_knob: var(--grey);
+    --fixed_dark_grey: rgb(100, 100, 100);
+    /* Views */
+    --view_gap: 0.5rem;
+}
+
+html {
+    /*     
+    Throughout the application, the size unit used is rem. This is a unit based on the default font size (16px).
+    We set the font size here so that each rem is equivalent to 10 pixels.
+    The default font size is 16 pixels, so we divide 10/16, to obtain 62.5%.
+    Modifying this value will affect every size in the application.
+    */
+    font-size: 62.5%;
+}
+
+/* Fonts */
+
+@font-face {
+    font-family: 'Ubuntu-Light';
+    src: url('../assets/fonts/Ubuntu-Light.ttf');
+}
+
+@font-face {
+    font-family: 'Ubuntu-Regular';
+    src: url('../assets/fonts/Ubuntu-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Ubuntu-Medium';
+    src: url('../assets/fonts/Ubuntu-Medium.ttf');
+}
+
+@font-face {
+    font-family: 'Ubuntu-Bold';
+    src: url('../assets/fonts/Ubuntu-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Oswald-Regular';
+    src: url('assets/fonts/Oswald-Regular.ttf');
+}
+
+/* Animations */
+@keyframes shake {
+
+    8%,
+    41% {
+        -webkit-transform: translateX(-1.0rem);
+    }
+
+    25%,
+    58% {
+        -webkit-transform: translateX(1.0rem);
+    }
+
+    75% {
+        -webkit-transform: translateX(-.5rem);
+    }
+
+    92% {
+        -webkit-transform: translateX(.5rem);
+    }
+
+    0%,
+    100% {
+        -webkit-transform: translateX(0);
+    }
+}

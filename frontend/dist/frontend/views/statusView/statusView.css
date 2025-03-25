@@ -1,0 +1,48 @@
+/* CSS for rotating the loading image */
+.statusView_loading {
+  display: block; /* Ensures the image is displayed as a block-level element */
+  margin: auto; /* Center the image horizontally if needed */
+  width: 50px; /* Set a specific width (adjust as necessary) */
+  height: 50px; /* Set a specific height (adjust as necessary) */
+  animation: spin 1s linear infinite; /* Apply the spin animation */
+}
+
+/* Define the spin animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start from 0 degrees */
+  }
+  100% {
+    transform: rotate(360deg); /* Rotate to 360 degrees */
+  }
+}
+
+.statusView_columnTitles {
+  display: grid;
+  /*column-gap: 15rem;*/
+}
+.statusView_instanceNameText {
+  grid-area: 2/1/2/1;
+  margin-left: 1rem;
+}
+
+.statusView_logInButton{
+  grid-area: 1/1/1/1;
+  margin-left: 1rem;
+  font-size: 1.5rem;
+}
+.statusView_refreshButton{
+  grid-area: 1/2/1/2;
+  margin-left: 1rem;
+  font-size:1.5rem;
+  width: 13rem
+}
+.statusView_stateText {
+  grid-area: 2/2/2/4;
+  margin-left: 40rem;
+  justify-self: end;
+}
+
+/*.instanceManagement_reachableText {*/
+/*  grid-area: 1/3/1/3;*/
+/*}*/

@@ -1,0 +1,95 @@
+/**
+* displayBox.js
+*
+* @author Edwin Cotto <edtowers1037@gmail.com>
+* @copyright Edwin Cotto, All rights reserved.
+*
+* @version 2024-February-04 initial version
+*/
+
+
+.displayBox__background {
+    z-index: 20;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    margin: 0rem;
+    background-color: transparent;
+    display: block;
+}
+
+.displayBox__floatingPanelBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    width: 100vw;
+    height: 100vh;
+    transition: all ease-in-out .5s, width 0s;
+}
+
+.displayBox__floatingPanel {
+    width: 100vw;
+    position: relative;
+    background-color: transparent;
+    border-radius: var(--rounded_border_radius);
+    margin: auto;
+}
+
+.displayBox__view-translucentBlack {
+    background-color: var(--fadeInColor);
+}
+
+.displayBox__floatingPanel-collapsedTop {
+    transform: translateY(-110vh);
+}
+
+.displayBox__floatingPanel-collapsedBottom {
+    transform: translateY(110vh);
+}
+
+.displayBox__floatingPanel-collapsedLeft {
+    transform: translateX(-110vw);
+}
+
+.displayBox__floatingPanel-collapsedRight {
+    transform: translateX(110vw);
+}
+
+.displayBox__floatingPanel-expandedLeft,
+.displayBox__floatingPanel-expandedRight {
+    transform: translateX(0rem);
+}
+
+.displayBox__floatingPanel-expandedTop,
+.displayBox__floatingPanel-expandedBottom {
+    transform: translateY(0rem);
+}
+
+/* Box box */
+
+.stringBoxBox__view {
+    height: fit-content;
+    max-width: 100rem;
+    width: fit-content;
+    padding: 2rem 3rem;
+    margin: 8rem auto auto auto;
+    display: grid;
+    gap: 2rem;
+}
+
+.stringBoxBox__heading {
+    width: 100%;
+    text-align: justify;
+    font-family: var(--font-bold);
+    line-break: anywhere;
+}
+
+.stringBoxBox__buttonContainer {
+    width: fit-content;
+    gap: 2rem;
+    justify-self: flex-end;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 1fr 1fr;
+}
