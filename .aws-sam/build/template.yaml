@@ -1,0 +1,427 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SamApp
+Transform:
+- AWS::Serverless-2016-10-31
+Parameters:
+  Region:
+    Type: String
+    Default: us-east-1
+Resources:
+  EC2StateChangeTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Instance State Change
+      TopicName: EC2StateChangeNotifications
+  EmailSubscriptionLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: EmailSubscriptionLambda
+      Handler: src/handlers/emailSub.handler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 256
+      Timeout: 100
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN:
+            Ref: EC2StateChangeTopic
+          REGION:
+            Ref: Region
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - sns:Subscribe
+          Resource:
+            Ref: EC2StateChangeTopic
+    Metadata:
+      SamResourceId: EmailSubscriptionLambda
+  updateInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: updateInfoFunction
+      Handler: src/handlers/updateInfo.handler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 256
+      Timeout: 100
+      Description: null
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:DescribeInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - sns:Publish
+          Resource:
+            Ref: EC2StateChangeTopic
+      Environment:
+        Variables:
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          SNS_TOPIC_ARN:
+            Ref: EC2StateChangeTopic
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: updateInfoFunction
+  startInstanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: startInstanceFunction
+      Handler: src/handlers/start-instance.startInstanceHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:StartInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - sns:Publish
+          Resource:
+            Ref: EC2StateChangeTopic
+      Environment:
+        Variables:
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          SNS_TOPIC_ARN:
+            Ref: EC2StateChangeTopic
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: startInstanceFunction
+  stopInstanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: stopInstanceFunction
+      Handler: src/handlers/stop-instances.stopInstanceHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:StopInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - sns:Publish
+          Resource:
+            Ref: EC2StateChangeTopic
+      Environment:
+        Variables:
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          SNS_TOPIC_ARN:
+            Ref: EC2StateChangeTopic
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: stopInstanceFunction
+  rebootInstanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: rebootInstanceFunction
+      Handler: src/handlers/reboot-instance.rebootInstanceHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:RebootInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - sns:Publish
+          Resource:
+            Ref: EC2StateChangeTopic
+      Environment:
+        Variables:
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          SNS_TOPIC_ARN:
+            Ref: EC2StateChangeTopic
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: rebootInstanceFunction
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: LoginFunction
+      Handler: src/handlers/login.loginHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: '*'
+      Environment:
+        Variables:
+          USER_TABLE:
+            Ref: UserTable
+          LAMBDA_NAME:
+            Ref: SessionInitiatorFunction
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: LoginFunction
+  LogoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: LogoutFunction
+      Handler: src/handlers/logout.logoutHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SessionTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          Resource: '*'
+      Environment:
+        Variables:
+          USER_TABLE:
+            Ref: UserTable
+          SESSION_TABLE:
+            Ref: SessionTable
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: LogoutFunction
+  VerifySessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: VerifySessionFunction
+      Handler: src/handlers/verify-session.verifySessionHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SessionTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:UpdateItem
+          - dynamodb:GetItem
+          Resource: '*'
+      Environment:
+        Variables:
+          USER_TABLE:
+            Ref: UserTable
+          SESSION_TABLE:
+            Ref: SessionTable
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: VerifySessionFunction
+  SessionInitiatorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: SessionInitiatorFunction
+      Handler: src/handlers/session-initiator.handler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one item by
+        id from a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:UpdateItem
+          Resource: '*'
+      Environment:
+        Variables:
+          SESSION_TABLE:
+            Ref: SessionTable
+          REGION:
+            Ref: Region
+          ENDPOINT_OVERRIDE: ''
+    Metadata:
+      SamResourceId: SessionInitiatorFunction
+  InstanceTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: InstanceId
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+  UserTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: username
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+  SessionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: authToken
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+  WebSiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      WebsiteConfiguration:
+        IndexDocument: index.html
+  WebSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: WebSiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: PolicyForWebSiteBucket
+        Statement:
+        - Sid: AllowCloudFrontServicePrincipal
+          Effect: Allow
+          Principal:
+            Service: cloudfront.amazonaws.com
+          Action: s3:GetObject
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
+        - Sid: AllowPublicAccess
+          Effect: Allow
+          Principal: '*'
+          Action: s3:GetObject
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
+        - Sid: AllowPublicACLAccess
+          Effect: Allow
+          Principal: '*'
+          Action: s3:PutObjectAcl
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
+Outputs:
+  WebS3BucketName:
+    Description: S3 Bucket for hosting web frontend
+    Value:
+      Ref: WebSiteBucket
+  S3WebsiteURL:
+    Description: URL of the S3 bucket's static website
+    Value:
+      Fn::GetAtt:
+      - WebSiteBucket
+      - WebsiteURL
+Globals:
+  Function:
+    LoggingConfig:
+      LogFormat: JSON
