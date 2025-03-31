@@ -2,7 +2,7 @@ import { updateUsernameCookieExpiration } from "../../helpers/basicElements.js";
 
 export async function rebootInstances(instance) {
     try {
-        const response = await fetch(`https://bciyoxdhuqvyph7ifz3esrpjye0kivqn.lambda-url.us-east-1.on.aws/`, {//update to new link from lambda
+        const response = await fetch(`https://stvjomxfk6wz24dqfr53yzrgk40ktllw.lambda-url.us-east-2.on.aws/`, {//update to new link from lambda
             method: 'PUT', // Change to POST method
             body: JSON.stringify({ Instance: instance }),
         });
@@ -21,7 +21,7 @@ export async function rebootInstances(instance) {
 export async function startInstances(instance) {
     console.log(instance)
     try {
-        const response = await fetch(`https://4tneofgfl5ypaynrx43v66gxge0tmpdh.lambda-url.us-east-1.on.aws/`, {//update to new link from lambda
+        const response = await fetch(`https://zebjxwtn242jrfidqgrs3daae40cjhqw.lambda-url.us-east-2.on.aws/`, {//update to new link from lambda
             method: 'PUT', // Change to POST method
             body: JSON.stringify({ Instance: instance }),
         });
@@ -39,7 +39,7 @@ export async function startInstances(instance) {
 }
 export async function stopInstances(instance) {
     try {
-        const response = await fetch(`https://6ugvex4yw3ihpb4wkq742fygk40mgouw.lambda-url.us-east-1.on.aws/`, {//update to new link from lambda
+        const response = await fetch(`https://b55djaqswj7qb5hk3qczg4zkby0jczvk.lambda-url.us-east-2.on.aws/`, {//update to new link from lambda
             method: 'PUT', // Change to POST method
             body: JSON.stringify({ Instance: instance }),
         });
@@ -59,7 +59,7 @@ export async function stopInstances(instance) {
 
 export async function getInstances() {
     try {
-        const response = await fetch(`https://gxhg3syyw6hdq6cw4aydmhvc2a0xgjar.lambda-url.us-east-1.on.aws/`);
+        const response = await fetch(`https://3pebkutpk44hi7aclissxba7ee0vwvof.lambda-url.us-east-2.on.aws/`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -89,7 +89,7 @@ export async function login(username, pass, success = () => { }, fail = () => { 
     
     const password = simpleEncrypt(pass)
     try {
-        const response = await fetch(`https://kbbfoxeztz4nqgmo32caby7p7a0yjlke.lambda-url.us-east-1.on.aws/`, {
+        const response = await fetch(`https://o67fdzvwsb7dlxpfj23z32ecyq0hfvit.lambda-url.us-east-2.on.aws/`, {
             method: 'POST',
             body: JSON.stringify({ username, password })
         });
@@ -110,7 +110,7 @@ export async function login(username, pass, success = () => { }, fail = () => { 
 
 export async function subscription(email) {
     try {
-        const response = await fetch(`https://2wjnbyzleg37ugb27izordwqvq0zjucw.lambda-url.us-east-1.on.aws/`, {
+        const response = await fetch(``, {
             method: 'POST',
             body: JSON.stringify({ email })
         });
@@ -128,7 +128,7 @@ export async function subscription(email) {
 
 export async function verifySession(username) {
     try {
-        const response = await fetch(`https://3owjqmogs3eth7cwqq5arg3wyu0ofoxq.lambda-url.us-east-1.on.aws/`, {
+        const response = await fetch(`https://ydc2lqry764mlvugvoilsxm55q0adajz.lambda-url.us-east-2.on.aws/`, {
             method: 'POST',
             body: JSON.stringify({ username })
         });
@@ -146,7 +146,7 @@ export async function verifySession(username) {
 }
 export async function logout(user) {
     try {
-        const response = await fetch(`https://hudj4p6r3akj3bwslmzc2orvra0lxwie.lambda-url.us-east-1.on.aws/`, {//update to new link from lambda
+        const response = await fetch(`https://4klo2jyhlvg5rnkavketh7eoqi0kxtwo.lambda-url.us-east-2.on.aws/`, {//update to new link from lambda
             method: 'POST', // Change to POST method
             body: JSON.stringify({ username: user }),
         });

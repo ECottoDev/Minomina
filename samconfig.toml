@@ -17,6 +17,11 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
+s3_prefix = "SamApp"
+region = "us-east-2"
+disable_rollback = true
+parameter_overrides = "Region=\"us-east-2\""
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true
