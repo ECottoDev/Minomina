@@ -16,27 +16,6 @@ Resources:
       DisplayName: Instance State Change
       TopicName: EC2StateChangeNotifications
 
-  EmailSubscriptionLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: backend/
-      Handler: src/handlers/emailSub.handler 
-      Runtime: nodejs20.x  # You can use the appropriate Node.js runtime version
-      Architectures:
-      - x86_64
-      MemorySize: 256  # Optional: adjust based on your needs
-      Timeout: 100  # Timeout in seconds
-      Environment:
-        Variables:
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
-          REGION: !Ref Region
-      Policies:
-      - Statement:
-          - Effect: Allow
-            Action:
-              - sns:Subscribe
-            Resource: !Ref EC2StateChangeTopic
-
   #Database management
   updateInfoFunction:
     Type: AWS::Serverless::Function
@@ -327,6 +306,7 @@ Resources:
   WebSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: 'status2.minominapr.com'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - BucketKeyEnabled: true
@@ -334,6 +314,11 @@ Resources:
         Status: Enabled
       WebsiteConfiguration:
         IndexDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
 
   WebSiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
