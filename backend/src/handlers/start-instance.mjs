@@ -6,9 +6,11 @@ const snsClient = new SNSClient({ region: process.env.REGION }); // SNS client
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN; 
 
 export const startInstanceHandler = async (event, context) => {
-    const instance = JSON.parse(event.body);
-    const instanceId = instance.Instance.InstanceId
-    const instanceName = instance.Instance.InstanceName
+    
+    const instance = event.Use.Instance;
+    const instanceId = instance.InstanceId;
+    // const instanceName = null
+    const instanceName = instance.InstanceName
     return await handleStartInstance(instanceId, instanceName);
 };
 

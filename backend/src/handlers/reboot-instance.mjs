@@ -7,15 +7,15 @@ const snsClient = new SNSClient({ region: process.env.REGION }); // SNS client
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN; 
 
 export const rebootInstanceHandler = async (event, context) => {
-    const instance = JSON.parse(event.body);
-    const instanceId = instance.Instance.InstanceId
-    const instanceName = instance.Instance.InstanceName
+    const instance = event.Use.Instance;
+    const instanceId = instance.InstanceId
+    const instanceName = instance.InstanceName
    
     return await handleRebootInstance(instanceId, instanceName);
 };
 
 async function handleRebootInstance(instanceId, instanceName) { 
-    console.log(instanceName)
+    // console.log(instanceName)
     try {
         const commandParams = {
             InstanceIds: [instanceId] // InstanceIds must be an array of instance IDs

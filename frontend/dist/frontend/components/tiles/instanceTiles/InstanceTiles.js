@@ -80,7 +80,7 @@ export class InstanceTiles {
             return addClasses(createSVG('frontend/assets/icons/errorCircle2.svg'), 'instanceTiles_errorMark')
     }
     async handleStart(){
-         await startInstances(this.instance);
+        await startInstances(this.instance);
         this.refresh();
     }
     async handleStop(){

@@ -1,6 +1,10 @@
-import { addClasses, addEvent, createButton, appendChildren, createElementContainer,getDateObj, createParagraph, createHeadingText, createImg, delayedExecution, delayedListener, detachChildren, sortArrayOfObj } from "../../../helpers/basicElements.js";
+import { addClasses, addEvent, createButton, appendChildren, createElementContainer, createParagraph, createHeadingText, createImg, delayedExecution, delayedListener, detachChildren, sortArrayOfObj, getDateObj } from "../../../helpers/basicElements.js";
 import { StatusTiles } from "../../components/tiles/statusTiles/StatusTiles.js";
-import { getInstances, verifySession } from "../../databaseCallers/awsDataCalls.js";
+import { getInstances, verifySession, startInstances, startTest } from "../../databaseCallers/awsDataCalls.js";
+
+function getTwoDigitNumber(num) {
+        return ('0' + num).slice(-2);
+    }
 
 export class StatusView {
     constructor(parentProps) {
@@ -9,6 +13,7 @@ export class StatusView {
         this.handleRefresh = delayedExecution(this.handleRefresh.bind(this), 180000);
         this.setView();
     }
+
     async setView() {
         this.dateTime = `${getDateObj().day} ${getDateObj().month} ${getDateObj().year} ${getDateObj().time}`
         appendChildren(this.view, [
@@ -16,6 +21,8 @@ export class StatusView {
                  addEvent(addClasses(createButton('Log In'), 'statusView_logInButton'), async ()=>{ this.parentProps.setNavState('#/home')}),
                  addEvent(addClasses(createButton('Refresh'), 'statusView_refreshButton'), 
                         async ()=>{  //await getInstances(); 
+                                    // await startInstances('i-045002314b3b04bb5')
+                                    // await startTest();
                                    detachChildren(this.view);
                                     await this.setView();
                         }),

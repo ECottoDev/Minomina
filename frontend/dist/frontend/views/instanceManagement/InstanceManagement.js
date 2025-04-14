@@ -1,6 +1,6 @@
 import { addClasses, addEvent, appendChildren, createButton, createElementContainer, createHeadingText,getDateObj, createPillBox, createImg, createTextArea, delayedExecution, delayedListener, detachChildren, sortArrayOfObj, createInputBar, createParagraph } from "../../../helpers/basicElements.js";
 import { InstanceTiles } from "../../components/tiles/instanceTiles/InstanceTiles.js";
-import { getInstances, logout, rebootInstances, verifySession, subscription } from "../../databaseCallers/awsDataCalls.js";
+import { getInstances, logout, rebootInstances, verifySession} from "../../databaseCallers/awsDataCalls.js";
 
 export class InstanceManagement {
     constructor(parentProps) {
@@ -44,7 +44,7 @@ export class InstanceManagement {
             this.loading = createImg('frontend/assets/icons/loading.svg'),
             addClasses(this.loading, 'instanceManagement_loading'),
         ]);
-        await this.fetch()
+        delayedExecution(async () => { await this.fetch() }, 1500)();
         this.handleRefresh();
     }
     async fetch() {
