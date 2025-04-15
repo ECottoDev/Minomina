@@ -103,9 +103,9 @@ async function handleComparison() {
     } else {
       // 3. If HTML exists, compare and decide
       if (compareArraysOfObj(ec2Sorted, dynamoSorted, 'Status')) {
-        console.log('✅ EC2 and DynamoDB match. Sending email.');
+        console.log('No changes to EC2 Instances State.');
       } else {
-        console.log('📝 EC2 and DynamoDB differ. Appending update and syncing.');
+        console.log('Updating the EC2 Information on Table. Sending email.');
 
         await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, ec2Sorted);
         await invokeTableUpdate();

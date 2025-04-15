@@ -6,7 +6,7 @@ Transform:
 Parameters:
   Region:
     Type: String
-    Default: us-east-1  
+    Default: us-east-2  
   FromEmail:
     Type: String
     Default: ecotto@prw.net
