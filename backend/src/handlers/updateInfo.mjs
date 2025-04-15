@@ -23,15 +23,26 @@ function getTwoDigitNumber(num) {
     return ('0' + num).slice(-2);
 }
 
+const date = new Date();
+const options = {
+  timeZone: 'America/Puerto_Rico', // AST (Atlantic Standard Time)
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: true
+};
+
+const format = new Intl.DateTimeFormat('en-US', options);
+const day = format.format(date)
+
 async function handleDescribeInstances() {
     try {
         const command = new DescribeInstancesCommand({});
         const data = await ec2Client.send(command);
-        const date = new Date();
         
-        const day = `${date.getMonth() + 1} / ${date.getDay()} / ${date.getFullYear()} - ${getTwoDigitNumber((date.getHours() > 12 ? date.getHours() - 12 : date.getHours()))}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()} ${date.getHours() >= 12 ? 'PM' : 'AM'}`
-      
-
         for (const reservation of data.Reservations) {
             for (const instance of reservation.Instances) {
                 let instanceName = '';
