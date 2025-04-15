@@ -21,25 +21,7 @@ export async function rebootInstances(Instance) {
     }
 }
 
-export async function startTest() {
-    try {
-        console.log('sending test')
-        const response = await fetch( link, {//update to new link from lambda
-            method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ }, Key: 'test' }),
-        });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data; // Assuming data is already structured correctly by Lambda
-    } catch (error) {
-        console.error('Error:', error);
-        return null;
-    }
-}
 export async function startInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
@@ -59,25 +41,6 @@ export async function startInstances(Instance) {
     }
 }
 
-// export async function startInstances(instance) {
-//     console.log(instance)
-//     try {
-//         const response = await fetch(`https://4tneofgfl5ypaynrx43v66gxge0tmpdh.lambda-url.us-east-1.on.aws/`, {//update to new link from lambda
-//             method: 'PUT', // Change to POST method
-//             body: JSON.stringify({ Instance: instance }),
-//         });
-
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! Status: ${response.status}`);
-//         }
-
-//         const data = await response.json();
-//         return data; // Assuming data is already structured correctly by Lambda
-//     } catch (error) {
-//         console.error('Error:', error);
-//         return null;
-//     }
-// }
 
 export async function stopInstances(Instance) {
     try {
@@ -137,21 +100,6 @@ export async function getInstances() {
     }
 }
 
-// export async function getInstances() {
-//     try {
-//         const response = await fetch(`https://w7rxtihtg3o77pf3xd3flv5oqe0mfjtc.lambda-url.us-east-1.on.aws/`);
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! Status: ${response.status}`);
-//         }
-
-//         const data = await response.json();
-//         return data
-//     } catch (error) {
-//         console.error('Error:', error);
-//         return null;
-//     }
-// }
-
 // Simple Caesar Cipher Encryption/Decryption (Insecure)
 function simpleEncrypt(text) {
     const shift = 7; // Shift each character by 3
@@ -187,35 +135,6 @@ export async function login(username, pass, success = () => { }, fail = () => { 
         throw error;
     }
 }
-
-
-// export async function login(username, pass, success = () => { }, fail = () => { }) {
-//     if (!username || !pass) {
-//         const errorMessage = 'Username and password are required';
-//         console.error(errorMessage);
-//         throw new Error(errorMessage);
-//     }
-    
-//     const password = simpleEncrypt(pass)
-//     try {
-//         const response = await fetch(`https://kbbfoxeztz4nqgmo32caby7p7a0yjlke.lambda-url.us-east-1.on.aws/`, {
-//             method: 'POST',
-//             body: JSON.stringify({ username, password })
-//         });
-
-//         if (!response.ok) {
-//             fail();
-//             throw new Error(`Failed to login. HTTP status: ${response.status}`);
-//         }
-//         const data = await response.json();
-//         success();
-//         return data;
-//     } catch (error) {
-//         console.error('Error logging in:', error);
-//         // fail();
-//         throw error;
-//     }
-// }
 
 export async function verifySession(username) {
     try {

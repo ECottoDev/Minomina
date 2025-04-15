@@ -6,18 +6,17 @@ Transform:
 Parameters:
   Region:
     Type: String
-    Default: us-east-1  
+    Default: us-east-2  
   FromEmail:
     Type: String
     Default: ecotto@prw.net
   ToEmail:
     Type: String
-    Default: ecotto@cloudium.net,ecotto@essnet.com
+    Default: ecotto@prw.net
   BucketName:
     Type: String
     Default: status2.minominapr.com
 Resources:
-  #SNS Topic definition
   
   sendEmailFunction:
     Type: AWS::Serverless::Function
@@ -48,11 +47,6 @@ Resources:
       - Statement:
             - Effect: Allow
               Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
-      - Statement:
-            - Effect: Allow
-              Action:
                 - ses:SendEmail
                 - ses:SendRawEmail
               Resource: "*"
@@ -75,7 +69,6 @@ Resources:
         Variables:
           GET_INSTANCES: !Ref updateInfoFunction
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
           FROM: !Ref FromEmail
           TO: !Ref ToEmail
           REGION: !Ref Region
@@ -86,7 +79,7 @@ Resources:
   dataEvaluationFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'DataEvaluation'
+      FunctionName: 'dataEvaluationFunction'
       CodeUri: backend/
       Handler: src/handlers/data-eval.handler
       Runtime: nodejs20.x
@@ -110,11 +103,6 @@ Resources:
                 - dynamodb:DescribeTable
               Resource: "*"
       - Statement:
-            - Effect: Allow
-              Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
-      - Statement:
           - Effect: Allow
             Action:
               - lambda:InvokeFunction
@@ -133,23 +121,13 @@ Resources:
         Variables:
           GET_INSTANCES: !Ref updateInfoFunction
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
-          FROM: !Ref FromEmail
-          TO: !Ref ToEmail
           REGION: !Ref Region
           BUCKET:  !Ref BucketName
-
-  
-  EC2StateChangeTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: Instance State Change
-      TopicName: EC2StateChangeNotifications
 
   apiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'APIFunction'
+      FunctionName: 'apiFunction'
       CodeUri: backend/
       Handler: src/handlers/API.apiHandler
       Runtime: nodejs20.x
@@ -221,15 +199,9 @@ Resources:
                 - dynamodb:PutItem
                 - dynamodb:DescribeTable
               Resource: "*"
-      - Statement:
-            - Effect: Allow
-              Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
       Environment:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
           REGION: !Ref Region
           ENDPOINT_OVERRIDE: ''
           
@@ -237,6 +209,7 @@ Resources:
   startInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'startInstanceFunction'
       CodeUri: backend/
       Handler: src/handlers/start-instance.startInstanceHandler
       Runtime: nodejs20.x
@@ -257,18 +230,19 @@ Resources:
       - Statement:
             - Effect: Allow
               Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
       Environment:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
           REGION: !Ref Region
           ENDPOINT_OVERRIDE: ''
   
   stopInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'stopInstanceFunction'
       CodeUri: backend/
       Handler: src/handlers/stop-instances.stopInstanceHandler
       Runtime: nodejs20.x
@@ -289,18 +263,19 @@ Resources:
       - Statement:
             - Effect: Allow
               Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
       Environment:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
           REGION: !Ref Region
           ENDPOINT_OVERRIDE: ''
 
   rebootInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'rebootInstanceFunction'
       CodeUri: backend/
       Handler: src/handlers/reboot-instance.rebootInstanceHandler
       Runtime: nodejs20.x
@@ -321,12 +296,12 @@ Resources:
       - Statement:
             - Effect: Allow
               Action:
-                - sns:Publish
-              Resource: !Ref EC2StateChangeTopic
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
       Environment:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
-          SNS_TOPIC_ARN: !Ref EC2StateChangeTopic
           REGION: !Ref Region
           ENDPOINT_OVERRIDE: ''
 
@@ -334,6 +309,7 @@ Resources:
   LoginFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'LoginFunction'
       CodeUri: backend/
       Handler: src/handlers/login.loginHandler
       Runtime: nodejs20.x
@@ -361,6 +337,7 @@ Resources:
   LogoutFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'LogoutFunction'
       CodeUri: backend/
       Handler: src/handlers/logout.logoutHandler
       Runtime: nodejs20.x
@@ -391,6 +368,7 @@ Resources:
   VerifySessionFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'VerifySessionFunction'
       CodeUri: backend/
       Handler: src/handlers/verify-session.verifySessionHandler
       Runtime: nodejs20.x
@@ -421,6 +399,7 @@ Resources:
   SessionInitiatorFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'SessionInitiatorFunction'
       CodeUri: backend/
       Handler: src/handlers/session-initiator.handler
       Runtime: nodejs20.x

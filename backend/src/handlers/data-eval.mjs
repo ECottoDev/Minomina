@@ -12,17 +12,11 @@ import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-
 
 const REGION = process.env.REGION;
 const ec2Client = new EC2Client({ region: REGION });
 const lambdaClient = new LambdaClient({ region: REGION });
 const s3 = new S3Client({ region: REGION });
-
-const sesClient = new SESClient({ region: REGION });
-const SENDER_EMAIL = process.env.FROM;
-const RECIPIENTS = process.env.TO.split(',').map(email => email.trim()); // comma-separated in env
 
 const dynamoClient = new DynamoDBClient({ region: REGION });
 const tableName = process.env.INSTANCE_TABLE;
@@ -46,9 +40,6 @@ const day = format.format(date)
 const HISTORY_KEY = `logs/status.minominapr.com-${date.getMonth() + 1}-${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}-${date.getFullYear()}.html`;
 
 export const handler = async (event, context) => {
-    console.log(SENDER_EMAIL)
-    console.log(RECIPIENTS)
-    console.log('ecotto@')
     await handleComparison();
 };
 

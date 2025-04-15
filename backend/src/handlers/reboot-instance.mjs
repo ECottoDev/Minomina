@@ -1,10 +1,12 @@
 import { EC2Client, RebootInstancesCommand } from "@aws-sdk/client-ec2";
-import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 
-const ec2Client = new EC2Client({ region: process.env.REGION }); // Specify your AWS region from cloud9
-const snsClient = new SNSClient({ region: process.env.REGION }); // SNS client
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN; 
+const REGION = process.env.REGION;
+const ec2Client = new EC2Client({ region: REGION }); // Specify your AWS region from cloud9
+const sesClient = new SESClient({ region: REGION });
+const SENDER_EMAIL = process.env.FROM;
+const RECIPIENTS = process.env.TO.split(','); 
 
 export const rebootInstanceHandler = async (event, context) => {
     const instance = event.Use.Instance;
@@ -15,33 +17,73 @@ export const rebootInstanceHandler = async (event, context) => {
 };
 
 async function handleRebootInstance(instanceId, instanceName) { 
-    // console.log(instanceName)
     try {
         const commandParams = {
             InstanceIds: [instanceId] // InstanceIds must be an array of instance IDs
         };
         const command = new RebootInstancesCommand(commandParams);
         const data = await ec2Client.send(command);
-        const snsMessage = instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. The instanace has been successfully queued for the reboot process.` : `This is a message for instance ${instanceId}. The instanace has been successfully queued for the reboot process.` ;
-        const snsParams = {
-            Message: JSON.stringify(snsMessage),
-            TopicArn: SNS_TOPIC_ARN, // ARN of the SNS topic to publish to
-            Subject: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Reboot Notification` : `Instance ${instanceId} - Reboot Notification`
-        };
-        await snsClient.send(new PublishCommand(snsParams));
-        return {
-            statusCode: 200,
-        };
+           const params = {
+            Source: SENDER_EMAIL,
+            Destination: {
+              ToAddresses: RECIPIENTS
+            },
+            Message: {
+              Subject: {
+                Data: `AWS EC2 Instances Manual State Change - ${instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Reboot Notification` : `Instance ${instanceId} - Reboot Notification`}`
+              },
+              Body: {
+                Html: {
+                  Data: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. The instanace has been successfully queued for the Reboot process.` : `This is a message for instance ${instanceId}. The instanace has been successfully queued for the Reboot process.` 
+                }
+              }
+            }
+        }
+        
+        try {
+            const result = await sesClient.send(new SendEmailCommand(params));
+            return {
+              statusCode: 200,
+              body: `Email sent! Message ID: ${result.MessageId}`
+            };
+          } catch (err) {
+            console.error("Error sending email:", err);
+            return {
+              statusCode: 500,
+              body: `Failed to send email: ${err.message}`
+            };
+          }
     } catch (err) {
-        console.error(`Error rebooting instance ${instanceId}:`, err);
-        const snsMessage = instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. Sorry, the instanace could not be successfully queued for the reboot process.` : `This is a message for instance ${instanceId}. Sorry, the instanace could not be successfully queued for the reboot process.` ;
-        const snsParams = {
-            Message: JSON.stringify(snsMessage),
-            TopicArn: SNS_TOPIC_ARN, // ARN of the SNS topic to publish to
-            Subject: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Reboot Notification` : `Instance ${instanceId} - Reboot Notification`
-        };
-        await snsClient.send(new PublishCommand(snsParams));
-        return {
-            statusCode: 500
-        };
+        const params = {
+            Source: SENDER_EMAIL,
+            Destination: {
+              ToAddresses: RECIPIENTS
+            },
+            Message: {
+              Subject: {
+                Data: `AWS EC2 Instances Manual State Change - ${ instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Reboot Notification` : `Instance ${instanceId} - Reboot Notification`
+     }`
+              },
+              Body: {
+                Html: {
+                  Data: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. Sorry, the instanace could not be successfully queued for the Reboot process.` : `This is a message for instance ${instanceId}. Sorry, the instanace could not be successfully queued for the Reboot process.`
+
+                }
+              }
+            }
+        }
+        
+        try {
+            const result = await sesClient.send(new SendEmailCommand(params));
+            return {
+              statusCode: 200,
+              body: `Email sent! Message ID: ${result.MessageId}`
+            };
+          } catch (err) {
+            console.error("Error sending email:", err);
+            return {
+              statusCode: 500,
+              body: `Failed to send email: ${err.message}`
+            };
+          }
     }}

@@ -1,6 +1,6 @@
 import { addClasses, addEvent, createButton, appendChildren, createElementContainer, createParagraph, createHeadingText, createImg, delayedExecution, delayedListener, detachChildren, sortArrayOfObj, getDateObj } from "../../../helpers/basicElements.js";
 import { StatusTiles } from "../../components/tiles/statusTiles/StatusTiles.js";
-import { getInstances, verifySession, startInstances, startTest } from "../../databaseCallers/awsDataCalls.js";
+import { getInstances, verifySession, startInstances } from "../../databaseCallers/awsDataCalls.js";
 
 function getTwoDigitNumber(num) {
         return ('0' + num).slice(-2);
@@ -22,7 +22,6 @@ export class StatusView {
                  addEvent(addClasses(createButton('Refresh'), 'statusView_refreshButton'), 
                         async ()=>{  //await getInstances(); 
                                     // await startInstances('i-045002314b3b04bb5')
-                                    // await startTest();
                                    detachChildren(this.view);
                                     await this.setView();
                         }),

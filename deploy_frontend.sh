@@ -5,7 +5,7 @@
 stack_name="SamApp"
 
 # Get the AWS Region from the stack
-aws_region="us-east-1"
+aws_region="us-east-2"
 
 # Get the S3 Bucket Name from the stack
 s3_bucket_name=$(aws cloudformation describe-stacks --stack-name "$stack_name" --query "Stacks[0].Outputs[?OutputKey=='WebS3BucketName'].OutputValue" --output text)

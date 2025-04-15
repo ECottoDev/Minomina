@@ -1,11 +1,3 @@
-//function will look for ec2 instance information
-//then it will fetch the data from a table in dynamodb
-// and from a able inside an html document in an s3 bucket
-//it will compare each object and confirm if they have any changes between them
-//if there are no difference between them then take the information from the dynamodb
-//and compare it to the information inside the html table and if it is the same then make no changes
-// if there is a difference between the current ec2 instances info and the dynamo them take the current information
-//and the table inside the html document and add the current information to the table and update the s3 document
 
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
@@ -14,7 +6,6 @@ import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3
 
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-
 const REGION = process.env.REGION;
 const ec2Client = new EC2Client({ region: REGION });
 const lambdaClient = new LambdaClient({ region: REGION });
@@ -22,7 +13,7 @@ const s3 = new S3Client({ region: REGION });
 
 const sesClient = new SESClient({ region: REGION });
 const SENDER_EMAIL = process.env.FROM;
-const RECIPIENTS = process.env.TO.split(',').map(email => email.trim()); // comma-separated in env
+const RECIPIENTS = process.env.TO.split(','); // comma-separated in env
 
 const dynamoClient = new DynamoDBClient({ region: REGION });
 const tableName = process.env.INSTANCE_TABLE;
@@ -46,18 +37,11 @@ const day = format.format(date)
 const HISTORY_KEY = `logs/status.minominapr.com-${date.getMonth() + 1}-${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}-${date.getFullYear()}.html`;
 
 export const handler = async (event, context) => {
-    console.log(SENDER_EMAIL)
-    console.log(RECIPIENTS)
-    console.log('ecotto@')
     await handleComparison();
 };
 
 async function handleComparison() {
-  
-  // await SendEmail()
     try {
-
-    //   //get from ec2
         const command = new DescribeInstancesCommand({});
         const ec2Data = await ec2Client.send(command);
         
@@ -89,7 +73,6 @@ async function handleComparison() {
 
     if (!htmlExists) {
       console.log('📄 HTML file does not exist. Creating new file with EC2 data.');
-
       // Build a fresh HTML document and append data
       let newHtml = createNewHtmlDocument();
       const newSection = buildNewTableSection(ec2Sorted);
@@ -120,9 +103,7 @@ async function handleComparison() {
         await invokeTableUpdate();
         await SendEmail();
       }
-    }
-        
-
+  }
         return{
             statusCode: 200,
             body: console.log('done')
@@ -148,13 +129,11 @@ async function objectExists(bucket, key) {
   }
 }
 
-
 async function SendEmail(){
-  console.log(await getObjectText(HISTORY_BUCKET, HISTORY_KEY))
   const params = {
     Source: SENDER_EMAIL,
     Destination: {
-      ToAddresses: ['ecotto@cloudium.net', 'ecotto@essnet.com']
+      ToAddresses: RECIPIENTS
     },
     Message: {
       Subject: {

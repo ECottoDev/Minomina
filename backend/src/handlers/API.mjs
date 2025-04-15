@@ -21,8 +21,6 @@ export const apiHandler = async (event, context) => {
             return await getInstanceStates();
         else if (Key === 'start')
             return await startInstance(Use);
-        else if (Key === 'test')
-            return await startTest();
         else if (Key === 'stop')
             return await stopInstance(Use);
         else if (Key === 'reboot')
@@ -68,7 +66,6 @@ async function getInstanceStates() {
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
         const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // console.log('payload: ', JSON.parse(payload.body))
         return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
@@ -76,23 +73,6 @@ async function getInstanceStates() {
     }
 }
 
-async function startTest() {
-    console.log("starting the test")
-    try {
-        const params = {
-            FunctionName: TEST,
-            InvocationType: 'Event'
-        };
-        const command = new InvokeCommand(params);
-        const result = await lambdaClient.send(command);
-        // console.log(result)
-        // const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // return JSON.parse(payload.body);
-    } catch (err) {
-        console.error('Error invoking session initiator:', err);
-        throw err;
-    }
-}
 async function startInstance(Use) {
     try {
         const params = {
@@ -102,9 +82,6 @@ async function startInstance(Use) {
         };
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
-        // console.log(result)
-        // const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
         throw err;
@@ -120,8 +97,6 @@ async function stopInstance(Use) {
         };
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
-        // const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
         throw err;
@@ -137,8 +112,6 @@ async function rebootInstance(Use) {
         };
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
-        // const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
         throw err;
@@ -156,7 +129,6 @@ async function login(Use) {
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
         const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // console.log('payload: ', JSON.parse(payload.body))
         return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
@@ -175,7 +147,6 @@ async function logout(Use){
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
         const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        // console.log('payload: ', JSON.parse(payload.body))
         return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
@@ -193,7 +164,6 @@ async function verifySession(Use) {
         const command = new InvokeCommand(params);
         const result = await lambdaClient.send(command);
         const payload = JSON.parse(new TextDecoder().decode(result.Payload));
-        console.log('payload: ', JSON.parse(payload.body))
         return JSON.parse(payload.body);
     } catch (err) {
         console.error('Error invoking session initiator:', err);
