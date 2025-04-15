@@ -6,7 +6,8 @@ const SESSION_TABLE = process.env.SESSION_TABLE || 'YourSessionsTableName';
 
 export async function logoutHandler(event) {
     try {
-        const { username } = JSON.parse(event.body);
+        // const { username } = JSON.parse(event.body);
+        const username = event.Use.username;
         // Validate input
         if (!username) {
             return {

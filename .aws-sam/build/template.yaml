@@ -6,40 +6,216 @@ Parameters:
   Region:
     Type: String
     Default: us-east-1
+  FromEmail:
+    Type: String
+    Default: ecotto@prw.net
+  ToEmail:
+    Type: String
+    Default: ecotto@prw.net
+  BucketName:
+    Type: String
+    Default: status.minominapr.com
 Resources:
-  EC2StateChangeTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: Instance State Change
-      TopicName: EC2StateChangeNotifications
-  EmailSubscriptionLambda:
+  sendEmailFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: EmailSubscriptionLambda
-      Handler: src/handlers/emailSub.handler
+      FunctionName: sendEmailFunction
+      CodeUri: sendEmailFunction
+      Handler: src/handlers/send-report.handler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
       MemorySize: 256
       Timeout: 100
+      Description: null
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:DescribeInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:Scan
+          - dynamodb:DescribeTable
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: '*'
+      - Statement:
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+          - s3:ListBucket
+          Resource:
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
       Environment:
         Variables:
-          SNS_TOPIC_ARN:
-            Ref: EC2StateChangeTopic
+          GET_INSTANCES:
+            Ref: updateInfoFunction
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          FROM:
+            Ref: FromEmail
+          TO:
+            Ref: ToEmail
           REGION:
             Ref: Region
+          BUCKET:
+            Ref: BucketName
+    Metadata:
+      SamResourceId: sendEmailFunction
+  dataEvaluationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: dataEvaluationFunction
+      CodeUri: dataEvaluationFunction
+      Handler: src/handlers/data-eval.handler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 256
+      Timeout: 100
+      Description: null
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ec2:DescribeInstances
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:Scan
+          - dynamodb:DescribeTable
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
+      - Statement:
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+          - s3:ListBucket
+          Resource:
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
+      Environment:
+        Variables:
+          GET_INSTANCES:
+            Ref: updateInfoFunction
+          INSTANCE_TABLE:
+            Ref: InstanceTable
+          FROM:
+            Ref: FromEmail
+          TO:
+            Ref: ToEmail
+          REGION:
+            Ref: Region
+          BUCKET:
+            Ref: BucketName
+    Metadata:
+      SamResourceId: dataEvaluationFunction
+  apiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: apiFunction
+      CodeUri: apiFunction
+      Handler: src/handlers/API.apiHandler
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      MemorySize: 256
+      Timeout: 100
+      Description: null
       Policies:
       - Statement:
         - Effect: Allow
           Action:
-          - sns:Subscribe
-          Resource:
-            Ref: EC2StateChangeTopic
+          - lambda:InvokeFunction
+          Resource: '*'
+      Environment:
+        Variables:
+          REGION:
+            Ref: Region
+          DATA_EVAL:
+            Ref: dataEvaluationFunction
+          GET_INSTANCES:
+            Ref: updateInfoFunction
+          START_INSTANCES:
+            Ref: startInstanceFunction
+          STOP_INSTANCES:
+            Ref: stopInstanceFunction
+          REBOOT_INSTANCES:
+            Ref: rebootInstanceFunction
+          LOGIN:
+            Ref: LoginFunction
+          LOGOUT:
+            Ref: LogoutFunction
+          VERIFY:
+            Ref: VerifySessionFunction
+          TEST_SES:
+            Ref: sendEmailFunction
+          ENDPOINT_OVERRIDE: ''
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+          - '*'
+          AllowMethods:
+          - POST
+          - PUT
+          AllowHeaders:
+          - '*'
+          AllowCredentials: false
     Metadata:
-      SamResourceId: EmailSubscriptionLambda
+      SamResourceId: apiFunction
   updateInfoFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: updateInfoFunction
       CodeUri: updateInfoFunction
       Handler: src/handlers/updateInfo.handler
       Runtime: nodejs20.x
@@ -66,20 +242,12 @@ Resources:
         - Effect: Allow
           Action:
           - dynamodb:PutItem
-          - dynamodb:Scan
+          - dynamodb:DescribeTable
           Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - sns:Publish
-          Resource:
-            Ref: EC2StateChangeTopic
       Environment:
         Variables:
           INSTANCE_TABLE:
             Ref: InstanceTable
-          SNS_TOPIC_ARN:
-            Ref: EC2StateChangeTopic
           REGION:
             Ref: Region
           ENDPOINT_OVERRIDE: ''
@@ -88,6 +256,7 @@ Resources:
   startInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: startInstanceFunction
       CodeUri: startInstanceFunction
       Handler: src/handlers/start-instance.startInstanceHandler
       Runtime: nodejs20.x
@@ -109,15 +278,13 @@ Resources:
       - Statement:
         - Effect: Allow
           Action:
-          - sns:Publish
-          Resource:
-            Ref: EC2StateChangeTopic
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
       Environment:
         Variables:
           INSTANCE_TABLE:
             Ref: InstanceTable
-          SNS_TOPIC_ARN:
-            Ref: EC2StateChangeTopic
           REGION:
             Ref: Region
           ENDPOINT_OVERRIDE: ''
@@ -126,6 +293,7 @@ Resources:
   stopInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: stopInstanceFunction
       CodeUri: stopInstanceFunction
       Handler: src/handlers/stop-instances.stopInstanceHandler
       Runtime: nodejs20.x
@@ -147,15 +315,13 @@ Resources:
       - Statement:
         - Effect: Allow
           Action:
-          - sns:Publish
-          Resource:
-            Ref: EC2StateChangeTopic
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
       Environment:
         Variables:
           INSTANCE_TABLE:
             Ref: InstanceTable
-          SNS_TOPIC_ARN:
-            Ref: EC2StateChangeTopic
           REGION:
             Ref: Region
           ENDPOINT_OVERRIDE: ''
@@ -164,6 +330,7 @@ Resources:
   rebootInstanceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: rebootInstanceFunction
       CodeUri: rebootInstanceFunction
       Handler: src/handlers/reboot-instance.rebootInstanceHandler
       Runtime: nodejs20.x
@@ -185,15 +352,13 @@ Resources:
       - Statement:
         - Effect: Allow
           Action:
-          - sns:Publish
-          Resource:
-            Ref: EC2StateChangeTopic
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
       Environment:
         Variables:
           INSTANCE_TABLE:
             Ref: InstanceTable
-          SNS_TOPIC_ARN:
-            Ref: EC2StateChangeTopic
           REGION:
             Ref: Region
           ENDPOINT_OVERRIDE: ''
@@ -202,6 +367,7 @@ Resources:
   LoginFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: LoginFunction
       CodeUri: LoginFunction
       Handler: src/handlers/login.loginHandler
       Runtime: nodejs20.x
@@ -234,6 +400,7 @@ Resources:
   LogoutFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: LogoutFunction
       CodeUri: LogoutFunction
       Handler: src/handlers/logout.logoutHandler
       Runtime: nodejs20.x
@@ -270,6 +437,7 @@ Resources:
   VerifySessionFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: VerifySessionFunction
       CodeUri: VerifySessionFunction
       Handler: src/handlers/verify-session.verifySessionHandler
       Runtime: nodejs20.x
@@ -306,6 +474,7 @@ Resources:
   SessionInitiatorFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: SessionInitiatorFunction
       CodeUri: SessionInitiatorFunction
       Handler: src/handlers/session-initiator.handler
       Runtime: nodejs20.x
@@ -336,6 +505,7 @@ Resources:
   InstanceTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
+      TableName: InstanceTable
       PrimaryKey:
         Name: InstanceId
         Type: String
@@ -345,6 +515,7 @@ Resources:
   UserTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
+      TableName: UsersTable
       PrimaryKey:
         Name: username
         Type: String
@@ -354,6 +525,7 @@ Resources:
   SessionTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
+      TableName: SessionsTable
       PrimaryKey:
         Name: authToken
         Type: String
@@ -363,6 +535,7 @@ Resources:
   WebSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: status.minominapr.com
       BucketEncryption:
         ServerSideEncryptionConfiguration:
         - BucketKeyEnabled: true
@@ -370,6 +543,11 @@ Resources:
         Status: Enabled
       WebsiteConfiguration:
         IndexDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
   WebSiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:

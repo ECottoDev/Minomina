@@ -1,14 +1,17 @@
 import { EC2Client, StartInstancesCommand } from "@aws-sdk/client-ec2";
-import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-const ec2Client = new EC2Client({ region: process.env.REGION }); // Specify your AWS region from cloud9
-const snsClient = new SNSClient({ region: process.env.REGION }); // SNS client
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN; 
+const REGION = process.env.REGION;
+const ec2Client = new EC2Client({ region: REGION }); // Specify your AWS region from cloud9
+const sesClient = new SESClient({ region: REGION });
+const SENDER_EMAIL = process.env.FROM;
+const RECIPIENTS = process.env.TO.split(','); 
 
 export const startInstanceHandler = async (event, context) => {
-    const instance = JSON.parse(event.body);
-    const instanceId = instance.Instance.InstanceId
-    const instanceName = instance.Instance.InstanceName
+    
+    const instance = event.Use.Instance;
+    const instanceId = instance.InstanceId;
+    const instanceName = instance.InstanceName
     return await handleStartInstance(instanceId, instanceName);
 };
 
@@ -19,29 +22,67 @@ async function handleStartInstance(instanceId, instanceName) {
         };
         const command = new StartInstancesCommand(commandParams);
         const data = await ec2Client.send(command);
-        const snsMessage = instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. The instanace has been successfully queued for the start process.` : `This is a message for instance ${instanceId}. The instanace has been successfully queued for the start process.` ;
-        const snsParams = {
-            Message: JSON.stringify(snsMessage),
-            TopicArn: SNS_TOPIC_ARN, // ARN of the SNS topic to publish to
-            Subject: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Start Notification` : `Instance ${instanceId} - Start Notification`
-        };
-        await snsClient.send(new PublishCommand(snsParams));
-        console.log(`SNS notification sent for instance ${instanceId}`);
-        return {
-            statusCode: 200
-        };
+           const params = {
+            Source: SENDER_EMAIL,
+            Destination: {
+              ToAddresses: RECIPIENTS
+            },
+            Message: {
+              Subject: {
+                Data: `AWS EC2 Instances Manual State Change - ${instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Start Notification` : `Instance ${instanceId} - Start Notification`}`
+              },
+              Body: {
+                Html: {
+                  Data: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. The instanace has been successfully queued for the Start process.` : `This is a message for instance ${instanceId}. The instanace has been successfully queued for the Start process.` 
+                }
+              }
+            }
+        }
+        
+        try {
+            const result = await sesClient.send(new SendEmailCommand(params));
+            return {
+              statusCode: 200,
+              body: `Email sent! Message ID: ${result.MessageId}`
+            };
+          } catch (err) {
+            console.error("Error sending email:", err);
+            return {
+              statusCode: 500,
+              body: `Failed to send email: ${err.message}`
+            };
+          }
     } catch (err) {
-        console.error(`Error Starting instance ${instanceId}:`, err);
-        const snsMessage = instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. Sorry, the instanace could not be successfully queued for the start process.` : `This is a message for instance ${instanceId}. Sorry, the instanace could not be successfully queued for the start process.` ;
-        const snsParams = {
-            Message: JSON.stringify(snsMessage),
-            TopicArn: SNS_TOPIC_ARN,
-            Subject: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Start Notification` : `Instance ${instanceId} - Start Notification`
-        };
-        await snsClient.send(new PublishCommand(snsParams));
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: `Error starting instance ${instanceId}: ${err.message}` })
-        };
+        const params = {
+            Source: SENDER_EMAIL,
+            Destination: {
+              ToAddresses: RECIPIENTS
+            },
+            Message: {
+              Subject: {
+                Data: `AWS EC2 Instances Manual State Change - ${ instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `Instance ${instanceId} / ${instanceName} - Start Notification` : `Instance ${instanceId} - Start Notification`
+     }`
+              },
+              Body: {
+                Html: {
+                  Data: instanceName !== '' && instanceName !== null && instanceName !== '<empty>' ? `This is a message for instance ${instanceId} / ${instanceName}. Sorry, the instanace could not be successfully queued for the Start process.` : `This is a message for instance ${instanceId}. Sorry, the instanace could not be successfully queued for the Start process.`
+
+                }
+              }
+            }
+        }
+        
+        try {
+            const result = await sesClient.send(new SendEmailCommand(params));
+            return {
+              statusCode: 200,
+              body: `Email sent! Message ID: ${result.MessageId}`
+            };
+          } catch (err) {
+            console.error("Error sending email:", err);
+            return {
+              statusCode: 500,
+              body: `Failed to send email: ${err.message}`
+            };
+          }
     }}
-    

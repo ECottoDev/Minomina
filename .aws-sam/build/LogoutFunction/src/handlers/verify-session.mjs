@@ -6,7 +6,7 @@ const TABLE_NAME = process.env.SESSION_TABLE || 'YourDynamoDBTableName';
 
 export async function verifySessionHandler(event) {
     try {
-        const { username } = JSON.parse(event.body);
+        const username  = event.Use.username;
         const getUserParams ={
             TableName: USER_TABLE,
             Key: {

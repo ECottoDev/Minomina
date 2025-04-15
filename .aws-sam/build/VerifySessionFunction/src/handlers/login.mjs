@@ -10,7 +10,9 @@ const LAMBDA_NAME = process.env.LAMBDA_NAME || 'YourLambdaName';
 
 export const loginHandler = async (event, context) => {
     try {
-        const { username, password } = JSON.parse(event.body);
+        
+        const username = event.Use.username;
+        const password = event.Use.password;
         
         // Validate inputs
         if (!username || !password) {

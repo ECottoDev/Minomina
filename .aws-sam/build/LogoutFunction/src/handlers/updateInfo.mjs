@@ -19,11 +19,18 @@ export const handler = async (event, context) => {
     await handleDescribeInstances();
     return retrieveFromTable();
 };
+function getTwoDigitNumber(num) {
+    return ('0' + num).slice(-2);
+}
 
 async function handleDescribeInstances() {
     try {
         const command = new DescribeInstancesCommand({});
         const data = await ec2Client.send(command);
+        const date = new Date();
+        
+        const day = `${date.getMonth() + 1} / ${date.getDay()} / ${date.getFullYear()} - ${getTwoDigitNumber((date.getHours() > 12 ? date.getHours() - 12 : date.getHours()))}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()} ${date.getHours() >= 12 ? 'PM' : 'AM'}`
+      
 
         for (const reservation of data.Reservations) {
             for (const instance of reservation.Instances) {
@@ -38,6 +45,7 @@ async function handleDescribeInstances() {
                     InstanceType: instance.InstanceType,
                     InstanceName: instanceName,
                     Status: instance.State.Name,
+                    LastChecked: day
                 };
                 if (instanceDetails.Status !== "Terminated" && instanceDetails.Status !== "terminated")
                     await putStatus(instanceDetails);
@@ -64,14 +72,15 @@ async function putStatus(instanceDetails) {
             InstanceId: instanceDetails.InstanceId,
             InstanceName: instanceDetails.InstanceName,
             Status: instanceDetails.Status,
+            LastChecked: instanceDetails.LastChecked,
             }
-    console.log(instance);
     const params = {
         TableName: tableName,
         Item: {
             InstanceId: { S: instance.InstanceId },
             InstanceName: { S: instance.InstanceName },
             Status: { S: instance.Status},
+            LastChecked: { S: instance.LastChecked}
         }
     };
     try {
@@ -92,8 +101,6 @@ async function retrieveFromTable() {
             };
 
             const data = await dynamoClient.send(new ScanCommand(params));
-            
-            // console.log(data.Items)
 
             if (data.Items && data.Items.length > 0) {
                 for (const item of data.Items) {
