@@ -6,7 +6,7 @@ Transform:
 Parameters:
   Region:
     Type: String
-    Default: us-east-2  
+    Default: us-east-1  
   FromEmail:
     Type: String
     Default: ecotto@prw.net
@@ -15,7 +15,7 @@ Parameters:
     Default: ecotto@prw.net
   BucketName:
     Type: String
-    Default: status2.minominapr.com
+    Default: status.minominapr.com
 Resources:
   
   sendEmailFunction:
@@ -73,9 +73,7 @@ Resources:
           TO: !Ref ToEmail
           REGION: !Ref Region
           BUCKET:  !Ref BucketName
-  
-          
-  
+
   dataEvaluationFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -108,6 +106,12 @@ Resources:
               - lambda:InvokeFunction
             Resource: "*"
       - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+      - Statement:
             Effect: Allow
             Action:
               - s3:GetObject   # Read
@@ -121,6 +125,8 @@ Resources:
         Variables:
           GET_INSTANCES: !Ref updateInfoFunction
           INSTANCE_TABLE: !Ref InstanceTable
+          FROM: !Ref FromEmail
+          TO: !Ref ToEmail
           REGION: !Ref Region
           BUCKET:  !Ref BucketName
 
@@ -462,7 +468,7 @@ Resources:
   WebSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: 'status2.minominapr.com'
+      BucketName: 'status.minominapr.com'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - BucketKeyEnabled: true

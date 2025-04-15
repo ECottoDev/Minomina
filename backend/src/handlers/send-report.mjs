@@ -37,6 +37,7 @@ const day = format.format(date)
 const HISTORY_KEY = `logs/status.minominapr.com-${date.getMonth() + 1}-${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}-${date.getFullYear()}.html`;
 
 export const handler = async (event, context) => {
+
     await handleComparison();
 };
 
@@ -147,8 +148,6 @@ async function SendEmail(){
     }
   };
   
-  console.log('sending email')
-
   try {
     const result = await sesClient.send(new SendEmailCommand(params));
     return {

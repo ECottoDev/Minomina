@@ -11,12 +11,16 @@ import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const REGION = process.env.REGION;
 const ec2Client = new EC2Client({ region: REGION });
 const lambdaClient = new LambdaClient({ region: REGION });
 const s3 = new S3Client({ region: REGION });
+
+const sesClient = new SESClient({ region: REGION });
+const SENDER_EMAIL = process.env.FROM;
+const RECIPIENTS = process.env.TO.split(',');
 
 const dynamoClient = new DynamoDBClient({ region: REGION });
 const tableName = process.env.INSTANCE_TABLE;
@@ -44,8 +48,6 @@ export const handler = async (event, context) => {
 };
 
 async function handleComparison() {
-  
-  // await SendEmail()
     try {
 
     //   //get from ec2
@@ -107,6 +109,36 @@ async function handleComparison() {
 
         await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, ec2Sorted);
         await invokeTableUpdate();
+        const params = {
+          Source: SENDER_EMAIL,
+          Destination: {
+            ToAddresses: RECIPIENTS
+          },
+          Message: {
+            Subject: {
+              Data: 'AWS EC2 Instances Sudden State Change'
+            },
+            Body: {
+              Html: {
+                Data: await getObjectText(HISTORY_BUCKET, HISTORY_KEY)
+              }
+            }
+          }
+        };
+      
+        try {
+          const result = await sesClient.send(new SendEmailCommand(params));
+          return {
+            statusCode: 200,
+            body: `Email sent! Message ID: ${result.MessageId}`
+          };
+        } catch (err) {
+          console.error("Error sending email:", err);
+          return {
+            statusCode: 500,
+            body: `Failed to send email: ${err.message}`
+          };
+        }
       }
     }
         
