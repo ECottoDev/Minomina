@@ -49,8 +49,6 @@ export const handler = async (event, context) => {
 
 async function handleComparison() {
     try {
-
-    //   //get from ec2
         const command = new DescribeInstancesCommand({});
         const ec2Data = await ec2Client.send(command);
         
@@ -106,6 +104,10 @@ async function handleComparison() {
         console.log('No changes to EC2 Instances State.');
       } else {
         console.log('Updating the EC2 Information on Table. Sending email.');
+        
+        //filter from the ec2Sorted array objects different from dynamosorted, having only changes
+        
+        const runningInstances = ec2Sorted.filter(instance => instance.Status !== 'running' || instance.Status !== 'terminated' );
 
         await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, ec2Sorted);
         await invokeTableUpdate();

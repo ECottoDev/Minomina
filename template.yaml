@@ -12,7 +12,7 @@ Parameters:
     Default: ecotto@prw.net
   ToEmail:
     Type: String
-    Default: ecotto@prw.net
+    Default: edtowers1037@gmail.com
   BucketName:
     Type: String
     Default: status.minominapr.com
@@ -243,6 +243,8 @@ Resources:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
+          FROM: !Ref FromEmail
+          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
   
   stopInstanceFunction:
@@ -276,6 +278,8 @@ Resources:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
+          FROM: !Ref FromEmail
+          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
 
   rebootInstanceFunction:
@@ -309,6 +313,8 @@ Resources:
         Variables:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
+          FROM: !Ref FromEmail
+          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
 
   #Session Management
