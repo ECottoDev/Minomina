@@ -1,11 +1,3 @@
-//function will look for ec2 instance information
-//then it will fetch the data from a table in dynamodb
-// and from a able inside an html document in an s3 bucket
-//it will compare each object and confirm if they have any changes between them
-//if there are no difference between them then take the information from the dynamodb
-//and compare it to the information inside the html table and if it is the same then make no changes
-// if there is a difference between the current ec2 instances info and the dynamo them take the current information
-//and the table inside the html document and add the current information to the table and update the s3 document
 
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
@@ -76,73 +68,99 @@ async function handleComparison() {
         const ec2Sorted = instances.sort(sortArrayOfObj('InstanceName'))
         const dynamoSorted = (await retrieveFromTable()).sort(sortArrayOfObj("InstanceName"));
         
-         const htmlExists = await objectExists(HISTORY_BUCKET, HISTORY_KEY);
-
-    if (!htmlExists) {
-      console.log('📄 HTML file does not exist. Creating new file with EC2 data.');
-
-      // Build a fresh HTML document and append data
-      let newHtml = createNewHtmlDocument();
-      const newSection = buildNewTableSection(ec2Sorted);
-      const updatedHtml = insertNewSection(newHtml, newSection);
-
-      // Upload the new file to S3
-      const uploadParams = {
-        Bucket: HISTORY_BUCKET,
-        Key: HISTORY_KEY,
-        Body: updatedHtml,
-        ContentType: 'text/html'
-      };
-      await s3.send(new PutObjectCommand(uploadParams));
-      console.log(`✅ New HTML file created at s3://${HISTORY_BUCKET}/${HISTORY_KEY}`);
-
-      // Update DynamoDB and send email
-      await invokeTableUpdate();
-    } else {
-      // 3. If HTML exists, compare and decide
-      if (compareArraysOfObj(ec2Sorted, dynamoSorted, 'Status')) {
-        console.log('No changes to EC2 Instances State.');
-      } else {
-        console.log('Updating the EC2 Information on Table. Sending email.');
+        const differenceArray = getDifferingElements(ec2Sorted, dynamoSorted, 'Status');
         
-        //filter from the ec2Sorted array objects different from dynamosorted, having only changes
+        const htmlExists = await objectExists(HISTORY_BUCKET, HISTORY_KEY);
         
-        const runningInstances = ec2Sorted.filter(instance => instance.Status !== 'running' || instance.Status !== 'terminated' );
+        //compare arrays
+        if (compareArraysOfObj(ec2Sorted, dynamoSorted, 'Status')) {
+          console.log('No changes to EC2 Instances State.');
+        }
+        else{
+          if (!htmlExists) {
+          // Build a fresh HTML document and append data
+          let newHtml = createNewHtmlDocument();
+          const newSection = buildTableRows(differenceArray);
+          const updatedHtml = insertRowsIntoTable(newHtml, newSection);
+          
+          // // Upload the new file to S3
+          const uploadParams = {
+            Bucket: HISTORY_BUCKET,
+            Key: HISTORY_KEY,
+            Body: updatedHtml,
+            ContentType: 'text/html'
+          };
+          await s3.send(new PutObjectCommand(uploadParams));
+          console.log(`✅ New HTML file created at s3://${HISTORY_BUCKET}/${HISTORY_KEY}`);
 
-        await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, ec2Sorted);
-        await invokeTableUpdate();
-        const params = {
-          Source: SENDER_EMAIL,
-          Destination: {
-            ToAddresses: RECIPIENTS
-          },
-          Message: {
-            Subject: {
-              Data: 'AWS EC2 Instances Sudden State Change'
-            },
-            Body: {
-              Html: {
-                Data: await getObjectText(HISTORY_BUCKET, HISTORY_KEY)
+          // await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, differenceArray);
+          await invokeTableUpdate();
+
+            const params = {
+              Source: SENDER_EMAIL,
+              Destination: {
+                ToAddresses: RECIPIENTS
+              },
+              Message: {
+                Subject: {
+                  Data: 'AWS EC2 Instances Sudden State Change'
+                },
+                Body: {
+                  Html: {
+                    Data: await getObjectText(HISTORY_BUCKET, HISTORY_KEY)
+                  }
+                }
               }
+            };
+            try {
+              const result = await sesClient.send(new SendEmailCommand(params));
+              return {
+                statusCode: 200,
+                body: `Email sent! Message ID: ${result.MessageId}`
+              };
+            } catch (err) {
+              console.error("Error sending email:", err);
+              return {
+                statusCode: 500,
+                body: `Failed to send email: ${err.message}`
+              };
+            }
+            
+          }else{
+            await appendToEC2HistoryLog(HISTORY_BUCKET, HISTORY_KEY, differenceArray);
+          await invokeTableUpdate();
+
+            const params = {
+              Source: SENDER_EMAIL,
+              Destination: {
+                ToAddresses: RECIPIENTS
+              },
+              Message: {
+                Subject: {
+                  Data: 'AWS EC2 Instances Sudden State Change'
+                },
+                Body: {
+                  Html: {
+                    Data: await getObjectText(HISTORY_BUCKET, HISTORY_KEY)
+                  }
+                }
+              }
+            };
+            try {
+              const result = await sesClient.send(new SendEmailCommand(params));
+              return {
+                statusCode: 200,
+                body: `Email sent! Message ID: ${result.MessageId}`
+              };
+            } catch (err) {
+              console.error("Error sending email:", err);
+              return {
+                statusCode: 500,
+                body: `Failed to send email: ${err.message}`
+              };
             }
           }
-        };
-      
-        try {
-          const result = await sesClient.send(new SendEmailCommand(params));
-          return {
-            statusCode: 200,
-            body: `Email sent! Message ID: ${result.MessageId}`
-          };
-        } catch (err) {
-          console.error("Error sending email:", err);
-          return {
-            statusCode: 500,
-            body: `Failed to send email: ${err.message}`
-          };
         }
-      }
-    }
         
 
         return{
@@ -223,6 +241,23 @@ function compareArraysOfObj(arr1, arr2, ...props) {
   });
 }
 
+function getDifferingElements(arr1, arr2, ...props) {
+  const differingElements = [];
+
+  for (let i = 0; i < arr1.length; i++) {
+    const obj1 = arr1[i];
+    const obj2 = arr2[i];
+
+    const isDifferent = props.some(prop => obj1[prop] !== obj2?.[prop]);
+
+    if (isDifferent) {
+      differingElements.push(obj1);
+    }
+  }
+
+  return differingElements;
+}
+
 async function invokeTableUpdate() {
     try {
         const params = {
@@ -253,9 +288,9 @@ async function appendToEC2HistoryLog(bucket, key, instances) {
   }
 
 
-  const newSection = buildNewTableSection(instances);
+const newRows = buildTableRows(instances);
+const updatedHtml = insertRowsIntoTable(html, newRows);
 
-  const updatedHtml = insertNewSection(html, newSection);
 
   const uploadParams = {
     Bucket: bucket,
@@ -283,42 +318,25 @@ function streamToString(stream) {
   });
 }
 
-function buildNewTableSection(instances) {
-
-  let rows = instances.map(instance => `
+function buildTableRows(instances) {
+  return instances.map(instance => `
     <tr>
       <td>${instance.InstanceId}</td>
       <td>${instance.InstanceName}</td>
       <td>${instance.Status}</td>
       <td>${instance.LastChecked}</td>
-    </tr>`).join('\n');
-
-  return `
-    <h3>Snapshot from ${day}</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Instance ID</th>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Last Status Change</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-    </table>
-    <br/>
-  `;
+    </tr>`).join('');
 }
 
-function insertNewSection(html, sectionHtml) {
-  if (html.includes('</body>')) {
-    return html.replace('</body>', `${sectionHtml}\n</body>`);
-  } else {
-    return html + sectionHtml;
+
+function insertRowsIntoTable(html, rows) {
+  const marker = '</tbody>';
+  if (html.includes(marker)) {
+    return html.replace(marker, `${rows}\n${marker}`);
   }
+  return html; // fallback if something went wrong
 }
+
 
 function createNewHtmlDocument() {
   return `
@@ -335,6 +353,18 @@ function createNewHtmlDocument() {
     </head>
     <body>
       <h1>EC2 Instance History Log</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Instance ID</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Last Status Change</th>
+          </tr>
+        </thead>
+        <tbody id="instance-log-body">
+        </tbody>
+      </table>
     </body>
     </html>
   `;
