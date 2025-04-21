@@ -15,64 +15,9 @@ Parameters:
     Default: edtowers1037@gmail.com
   BucketName:
     Type: String
-    Default: status.minominapr.com
+    Default: status2.minominapr.com
 Resources:
   
-  sendEmailFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: 'sendEmailFunction'
-      CodeUri: backend/
-      Handler: src/handlers/send-report.handler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 256
-      Timeout: 100
-      Description:
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref InstanceTable
-      - Statement:
-            - Effect: Allow
-              Action:
-                - ec2:DescribeInstances
-              Resource: "*"
-      - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:Scan
-                - dynamodb:DescribeTable
-              Resource: "*"
-      - Statement:
-            - Effect: Allow
-              Action:
-                - ses:SendEmail
-                - ses:SendRawEmail
-              Resource: "*"
-      - Statement:
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-            Resource: "*"
-      - Statement:
-            Effect: Allow
-            Action:
-              - s3:GetObject   # Read
-              - s3:PutObject   # Write/Update
-              - s3:DeleteObject # Delete
-              - s3:ListBucket
-            Resource: 
-              - !Join ['', ['arn:aws:s3:::', !Ref WebSiteBucket]]
-              - !Join ['', ['arn:aws:s3:::', !Ref WebSiteBucket, '/*']]
-      Environment:
-        Variables:
-          GET_INSTANCES: !Ref updateInfoFunction
-          INSTANCE_TABLE: !Ref InstanceTable
-          FROM: !Ref FromEmail
-          TO: !Ref ToEmail
-          REGION: !Ref Region
-          BUCKET:  !Ref BucketName
 
   dataEvaluationFunction:
     Type: AWS::Serverless::Function
@@ -159,7 +104,6 @@ Resources:
           LOGIN: !Ref LoginFunction
           LOGOUT: !Ref LogoutFunction
           VERIFY: !Ref VerifySessionFunction
-          TEST_SES: !Ref sendEmailFunction
           ENDPOINT_OVERRIDE: ''
       FunctionUrlConfig:  # <- Add this block for Function URL
         AuthType: NONE    # Can be AWS_IAM or NONE
@@ -474,7 +418,7 @@ Resources:
   WebSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: 'status.minominapr.com'
+      BucketName: !Ref BucketName
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - BucketKeyEnabled: true

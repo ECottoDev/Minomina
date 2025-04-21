@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "SamApp"
+stack_name = "Minomina-Stack"
 
 [default.build.parameters]
 cached = true
@@ -17,6 +17,11 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
+s3_prefix = "Minomina-Stack"
+region = "us-east-2"
+parameter_overrides = "Region=\"us-east-2\" FromEmail=\"ecotto@prw.net\" ToEmail=\"edtowers1037@gmail.com\" BucketName=\"status2.minominapr.com\""
+image_repositories = []
+disable_rollback = true
 
 [default.package.parameters]
 resolve_s3 = true

@@ -1,6 +1,6 @@
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
-import { DynamoDBClient, PutItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, ScanCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
 
 const REGION = process.env.REGION;
 const ec2Client = new EC2Client({ region: REGION });
@@ -50,18 +50,28 @@ async function handleDescribeInstances() {
                 if (nameTag) {
                     instanceName = nameTag.Value;
                 }
-
+                
+                let status = instance.State.Name;
+                if (status === "pending" || status === "initiating") {
+                    status = "Running";
+                }
+        
                 const instanceDetails = {
                     InstanceId: instance.InstanceId,
                     InstanceType: instance.InstanceType,
                     InstanceName: instanceName,
-                    Status: instance.State.Name,
+                    Status: status,
                     LastChecked: day
                 };
-                if (instanceDetails.Status !== "Terminated" && instanceDetails.Status !== "terminated")
+                
+                await clearTable();
+                
+                if (status !== "Terminated" && status !== "terminated") {
                     await putStatus(instanceDetails);
+                }
             }
         }
+
 
         return{
             statusCode: 200,
@@ -102,6 +112,36 @@ async function putStatus(instanceDetails) {
     }
 };
 
+
+async function clearTable() {
+    try {
+        const scanParams = {
+            TableName: tableName,
+            ProjectionExpression: "InstanceId"  // Only need the key for deletion
+        };
+
+        const data = await dynamo.send(new ScanCommand(scanParams));
+
+        if (data.Items.length === 0) {
+            console.log("Table already empty.");
+            return;
+        }
+
+        for (const item of data.Items) {
+            const deleteParams = {
+                TableName: tableName,
+                Key: {
+                    InstanceId: item.InstanceId
+                }
+            };
+            await dynamo.send(new DeleteItemCommand(deleteParams));
+        }
+
+        console.log("All items deleted from table.");
+    } catch (err) {
+        console.error("Error clearing table:", err);
+    }
+}
 
 async function retrieveFromTable() {
     try {

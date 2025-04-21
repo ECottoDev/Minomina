@@ -1,6 +1,7 @@
 import { addClasses, addEvent, createButton, appendChildren, createElementContainer, createParagraph, createHeadingText, createImg, delayedExecution, delayedListener, detachChildren, sortArrayOfObj, getDateObj } from "../../../helpers/basicElements.js";
 import { StatusTiles } from "../../components/tiles/statusTiles/StatusTiles.js";
-import { getInstances, verifySession, startInstances } from "../../databaseCallers/awsDataCalls.js";
+import { getInstances, verifySession } from "../../databaseCallers/awsDataCalls.js";
+
 
 function getTwoDigitNumber(num) {
         return ('0' + num).slice(-2);
@@ -15,13 +16,15 @@ export class StatusView {
     }
 
     async setView() {
+        this.instances = (await getInstances()).sort(sortArrayOfObj('InstanceName'));
+        console.log(this.instances);
+        
         this.dateTime = `${getDateObj().day} ${getDateObj().month} ${getDateObj().year} ${getDateObj().time}`
         appendChildren(this.view, [
             appendChildren(addClasses(createElementContainer(), 'statusView_columnTitles'), [
                  addEvent(addClasses(createButton('Log In'), 'statusView_logInButton'), async ()=>{ this.parentProps.setNavState('#/home')}),
                  addEvent(addClasses(createButton('Refresh'), 'statusView_refreshButton'), 
-                        async ()=>{  //await getInstances(); 
-                                    // await startInstances('i-045002314b3b04bb5')
+                        async ()=>{ 
                                    detachChildren(this.view);
                                     await this.setView();
                         }),
@@ -36,9 +39,6 @@ export class StatusView {
         this.handleRefresh();
     }
     async fetch() {
-        this.instances = await getInstances();
-        this.instances.sort(sortArrayOfObj('InstanceName'));
-
         try {
             this.promises = await this.instances.map(entry =>
                 entry.Status !== 'terminated' ? new StatusTiles(this.parentProps, entry, delayedListener(() => { detachChildren(this.view); this.setView(); }, 1000)).view :null

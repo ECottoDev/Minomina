@@ -1,6 +1,7 @@
 
 import { addClasses, addEvent, appendChildren, createButton, createElementContainer, createHeadingText, createImg, createSVG, createSVGButton, createScrollArea, detachChildren, getURLParam, getUsernameCookie, navigate, parseRequestURL, redirect, setUsernameCookie, toPhoneFormat } from "../helpers/basicElements.js";
 import { routes } from "../helpers/router.js";
+import { config } from "../config.js";
 import { DisplayBox } from "./components/displayBox/DisplayBox.js";
 import { NavigationBar } from "./containers/navigationBar/NavigationBar.js";
 import { verifySession } from "./databaseCallers/awsDataCalls.js";
@@ -20,6 +21,7 @@ export class Index {
         this.setAppProps();
         this.container = addClasses(createScrollArea(), 'index_container');
         this.view = addClasses(createElementContainer(), 'index_view');
+        console.log(`${config}`);
         this.setView();
     }
     setAppProps() {
