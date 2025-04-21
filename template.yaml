@@ -10,15 +10,10 @@ Parameters:
   FromEmail:
     Type: String
     Default: ecotto@prw.net
-  ToEmail:
-    Type: String
-    Default: edtowers1037@gmail.com
   BucketName:
     Type: String
     Default: status2.minominapr.com
 Resources:
-  
-
   dataEvaluationFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -71,7 +66,6 @@ Resources:
           GET_INSTANCES: !Ref updateInfoFunction
           INSTANCE_TABLE: !Ref InstanceTable
           FROM: !Ref FromEmail
-          TO: !Ref ToEmail
           REGION: !Ref Region
           BUCKET:  !Ref BucketName
 
@@ -188,7 +182,6 @@ Resources:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
           FROM: !Ref FromEmail
-          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
   
   stopInstanceFunction:
@@ -223,7 +216,6 @@ Resources:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
           FROM: !Ref FromEmail
-          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
 
   rebootInstanceFunction:
@@ -258,7 +250,6 @@ Resources:
           INSTANCE_TABLE: !Ref InstanceTable
           REGION: !Ref Region
           FROM: !Ref FromEmail
-          TO: !Ref ToEmail
           ENDPOINT_OVERRIDE: ''
 
   #Session Management
@@ -440,13 +431,6 @@ Resources:
         Version: '2012-10-17'
         Id: PolicyForWebSiteBucket
         Statement:
-          # Allow CloudFront to access the objects in the bucket
-          - Sid: AllowCloudFrontServicePrincipal
-            Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Join ['', ['arn:aws:s3:::', !Ref WebSiteBucket, '/*']]
           # Allow public access to the objects in the bucket
           - Sid: AllowPublicAccess
             Effect: Allow

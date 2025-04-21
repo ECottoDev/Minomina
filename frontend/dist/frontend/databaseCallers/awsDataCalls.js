@@ -1,13 +1,14 @@
 import { updateUsernameCookieExpiration } from "../../helpers/basicElements.js";
+import { config } from "../../config.js";
 
 // const link = 'https://rrooxjwdksx6uizlc6brxjs4ye0qreet.lambda-url.us-east-2.on.aws/'
-const link = 'https://3kpmqphjjftm6nhcuddsmiqcqa0pbcma.lambda-url.us-east-1.on.aws/'
+const link = 'https://g352aavlali3jxay5n75qcvfey0apmnk.lambda-url.us-east-2.on.aws/'
 
 export async function rebootInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance }, Key: 'reboot' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail }, Key: 'reboot' }),
         });
 
         if (!response.ok) {
@@ -27,7 +28,7 @@ export async function startInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance }, Key: 'start' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail  }, Key: 'start' }),
         });
 
         if (!response.ok) {
@@ -47,7 +48,7 @@ export async function stopInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance }, Key: 'stop' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail  }, Key: 'stop' }),
         });
 
         if (!response.ok) {
@@ -55,26 +56,6 @@ export async function stopInstances(Instance) {
         }
 
         const data = await response.json();
-        return data; // Assuming data is already structured correctly by Lambda
-    } catch (error) {
-        console.error('Error:', error);
-        return null;
-    }
-}
-
-export async function apiTest(instance) {
-    try {
-        const response = await fetch( link, {//update to new link from lambda
-            method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance: instance }, Key:'start' }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log(data)
         return data; // Assuming data is already structured correctly by Lambda
     } catch (error) {
         console.error('Error:', error);
@@ -87,7 +68,7 @@ export async function getInstances() {
         const response = await fetch( link,
         {
             method: 'PUT',
-            body: JSON.stringify({Use:{}, Key:'refresh' }),
+            body: JSON.stringify({Use:{}, Key:'update' }),
         });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -128,8 +109,15 @@ export async function login(username, pass, success = () => { }, fail = () => { 
             throw new Error(`Failed to login. HTTP status: ${response.status}`);
         }
         const data = await response.json();
+        if (data.valid == false) {
+            fail();
+            return data;
+        }
+        else{
         success();
         return data;
+            
+        }
     } catch (error) {
         console.error('Error logging in:', error);
         // fail();

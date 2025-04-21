@@ -17,9 +17,6 @@ export class StatusView {
 
     async setView() {
         this.instances = (await getInstances()).sort(sortArrayOfObj('InstanceName'));
-        console.log(this.instances);
-        
-        this.dateTime = `${getDateObj().day} ${getDateObj().month} ${getDateObj().year} ${getDateObj().time}`
         appendChildren(this.view, [
             appendChildren(addClasses(createElementContainer(), 'statusView_columnTitles'), [
                  addEvent(addClasses(createButton('Log In'), 'statusView_logInButton'), async ()=>{ this.parentProps.setNavState('#/home')}),
@@ -28,7 +25,7 @@ export class StatusView {
                                    detachChildren(this.view);
                                     await this.setView();
                         }),
-                addClasses(createParagraph(`Last Updated: ${this.dateTime}`), 'instanceManagement_lastTimeUpdate'),
+                addClasses(createParagraph(`Last Updated: ${this.instances[0].LastChecked}`), 'instanceManagement_lastTimeUpdate'),
                 addClasses(createHeadingText(`Instance Name: `), 'statusView_instanceNameText'),
                 addClasses(createHeadingText(`State: `), 'statusView_stateText')
             ]),

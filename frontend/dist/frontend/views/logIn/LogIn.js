@@ -15,11 +15,12 @@ export class LogIn {
         appendChildren(this.view, [
             addClasses(createHeadingText('Cloudium login', { bold: true }), 'loginView_heading'),
             this.user = createInputBar({ placeholder: 'User' }),
-            this.password = addEvent(createInputBar({ type: 'password', placeholder: 'Password' }), () => { if (event.key === 'Enter') this.testUsers() }, 'keydown' ),
-            addEvent(addClasses(createButton('LOGIN'), 'loginView_addButton', 'loginView_button'), () => { this.testUsers() }),
+            this.password = addEvent(createInputBar({ type: 'password', placeholder: 'Password' }), () => { if (event.key === 'Enter') this.verifyUser() }, 'keydown' ),
+            addEvent(addClasses(createButton('LOGIN'), 'loginView_addButton', 'loginView_button'), () => { this.verifyUser() }),
+            addEvent(addClasses(createButton('Back'), 'loginView_backButton', 'loginView_button'), () => {this.parentProps.setNavState(routes.STATUS) }),
         ])
     }
-    async testUsers() {
+    async verifyUser() {
         await login(this.user.value, this.password.value, 
             ()=>{
                 appendChildren(this.view, [

@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "Minomina-Stack"
+stack_name = "minomina-stack"
 
 [default.build.parameters]
 cached = true
@@ -16,15 +16,16 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-resolve_s3 = true
-s3_prefix = "Minomina-Stack"
+resolve_s3 = false
+s3_bucket = "minomina-stack"
 region = "us-east-2"
 parameter_overrides = "Region=\"us-east-2\" FromEmail=\"ecotto@prw.net\" ToEmail=\"edtowers1037@gmail.com\" BucketName=\"status2.minominapr.com\""
 image_repositories = []
 disable_rollback = true
+s3_prefix = "minomina-stack"
 
 [default.package.parameters]
-resolve_s3 = true
+resolve_s3 = false
 
 [default.sync.parameters]
 watch = true

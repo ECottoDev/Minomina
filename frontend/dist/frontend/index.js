@@ -11,6 +11,7 @@ import { LogIn } from "./views/logIn/LogIn.js"
 
 
 window.onload = async () => { appendChildren(document.getElementById('root'), [new Index().view]); }
+document.title = config.title;
 
 export class Index {
     constructor() {
@@ -21,7 +22,6 @@ export class Index {
         this.setAppProps();
         this.container = addClasses(createScrollArea(), 'index_container');
         this.view = addClasses(createElementContainer(), 'index_view');
-        console.log(`${config}`);
         this.setView();
     }
     setAppProps() {
@@ -38,7 +38,7 @@ export class Index {
     async setView() {
         appendChildren(detachChildren(this.view), [
             appendChildren(addClasses(createElementContainer(), 'index_navBarContainer'), [
-                createImg('frontend/assets/images/cloudium.png'),
+                createImg(`${config.logo}`),
                 //     this.navBar = addClasses(new NavigationBar(this.appProps).view, 'index_navBar'),
             ]),
 

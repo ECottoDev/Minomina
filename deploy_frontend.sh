@@ -2,19 +2,18 @@
 
 # Get user input for stack name
 # read -p "Enter the name of the CloudFormation stack: " 
-stack_name="SamApp"
+stack_names="minomina-stack"
+
+s3_bucket_name="status2.minominapr.com"
 
 # Get the AWS Region from the stack
 aws_region="us-east-2"
-
-# Get the S3 Bucket Name from the stack
-s3_bucket_name=$(aws cloudformation describe-stacks --stack-name "$stack_name" --query "Stacks[0].Outputs[?OutputKey=='WebS3BucketName'].OutputValue" --output text)
 
 # Construct the S3 Bucket URL
 # For buckets in standard regions, the URL format is: http://bucket-name.s3-website.region.amazonaws.com
 # For buckets in regions using virtual-hosted-style URLs, the format is: http://bucket-name.s3-website.amazonaws.com
 
-s3_bucket_url="http://$s3_bucket_name.s3-website-$aws_region.amazonaws.com"
+s3_bucket_url="http://$s3_bucket_name.s3-website.$aws_region.amazonaws.com"
 
 # Output the results
 # echo "CloudFront Distribution ID: $cloudfront_distribution_id"
