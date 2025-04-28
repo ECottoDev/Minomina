@@ -8,85 +8,11 @@ Parameters:
     Default: us-east-2
   FromEmail:
     Type: String
-    Default: ecotto@prw.net
-  ToEmail:
-    Type: String
-    Default: ecotto@cloudium.net
+    Default: support@cloudium.net
   BucketName:
     Type: String
-    Default: status2.minominapr.com
+    Default: status.minominapr.com
 Resources:
-  dataEvaluationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: dataEvaluationFunction
-      CodeUri: dataEvaluationFunction
-      Handler: src/handlers/data-eval.handler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 256
-      Timeout: 100
-      Description: null
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: InstanceTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - ec2:DescribeInstances
-          Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - dynamodb:Scan
-          - dynamodb:DescribeTable
-          Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - lambda:InvokeFunction
-          Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - ses:SendEmail
-          - ses:SendRawEmail
-          Resource: '*'
-      - Statement:
-          Effect: Allow
-          Action:
-          - s3:GetObject
-          - s3:PutObject
-          - s3:DeleteObject
-          - s3:ListBucket
-          Resource:
-          - Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - Ref: WebSiteBucket
-          - Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - Ref: WebSiteBucket
-              - /*
-      Environment:
-        Variables:
-          GET_INSTANCES:
-            Ref: updateInfoFunction
-          INSTANCE_TABLE:
-            Ref: InstanceTable
-          FROM:
-            Ref: FromEmail
-          TO:
-            Ref: ToEmail
-          REGION:
-            Ref: Region
-          BUCKET:
-            Ref: BucketName
-    Metadata:
-      SamResourceId: dataEvaluationFunction
   apiFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -109,8 +35,6 @@ Resources:
         Variables:
           REGION:
             Ref: Region
-          DATA_EVAL:
-            Ref: dataEvaluationFunction
           GET_INSTANCES:
             Ref: updateInfoFunction
           START_INSTANCES:
@@ -216,8 +140,6 @@ Resources:
             Ref: Region
           FROM:
             Ref: FromEmail
-          TO:
-            Ref: ToEmail
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: startInstanceFunction
@@ -257,8 +179,6 @@ Resources:
             Ref: Region
           FROM:
             Ref: FromEmail
-          TO:
-            Ref: ToEmail
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: stopInstanceFunction
@@ -298,8 +218,6 @@ Resources:
             Ref: Region
           FROM:
             Ref: FromEmail
-          TO:
-            Ref: ToEmail
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: rebootInstanceFunction

@@ -1,8 +1,7 @@
 import { updateUsernameCookieExpiration } from "../../helpers/basicElements.js";
 import { config } from "../../config.js";
 
-// const link = 'https://rrooxjwdksx6uizlc6brxjs4ye0qreet.lambda-url.us-east-2.on.aws/'
-const link = 'https://g352aavlali3jxay5n75qcvfey0apmnk.lambda-url.us-east-2.on.aws/'
+const link = 'https://3pglejwdppysefv2sz5l4m6wqe0ephtt.lambda-url.us-east-2.on.aws/'
 
 export async function rebootInstances(Instance) {
     try {

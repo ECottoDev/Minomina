@@ -9,65 +9,11 @@ Parameters:
     Default: us-east-2  
   FromEmail:
     Type: String
-    Default: ecotto@prw.net
+    Default: support@cloudium.net
   BucketName:
     Type: String
-    Default: status2.minominapr.com
+    Default: status.minominapr.com
 Resources:
-  dataEvaluationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: 'dataEvaluationFunction'
-      CodeUri: backend/
-      Handler: src/handlers/data-eval.handler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 256
-      Timeout: 100
-      Description:
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref InstanceTable
-      - Statement:
-            - Effect: Allow
-              Action:
-                - ec2:DescribeInstances
-              Resource: "*"
-      - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:Scan
-                - dynamodb:DescribeTable
-              Resource: "*"
-      - Statement:
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-            Resource: "*"
-      - Statement:
-            - Effect: Allow
-              Action:
-                - ses:SendEmail
-                - ses:SendRawEmail
-              Resource: "*"
-      - Statement:
-            Effect: Allow
-            Action:
-              - s3:GetObject   # Read
-              - s3:PutObject   # Write/Update
-              - s3:DeleteObject # Delete
-              - s3:ListBucket
-            Resource: 
-              - !Join ['', ['arn:aws:s3:::', !Ref WebSiteBucket]]
-              - !Join ['', ['arn:aws:s3:::', !Ref WebSiteBucket, '/*']]
-      Environment:
-        Variables:
-          GET_INSTANCES: !Ref updateInfoFunction
-          INSTANCE_TABLE: !Ref InstanceTable
-          FROM: !Ref FromEmail
-          REGION: !Ref Region
-          BUCKET:  !Ref BucketName
 
   apiFunction:
     Type: AWS::Serverless::Function
@@ -90,7 +36,6 @@ Resources:
       Environment:
         Variables:
           REGION: !Ref Region
-          DATA_EVAL:  !Ref dataEvaluationFunction
           GET_INSTANCES: !Ref updateInfoFunction
           START_INSTANCES: !Ref startInstanceFunction
           STOP_INSTANCES: !Ref stopInstanceFunction

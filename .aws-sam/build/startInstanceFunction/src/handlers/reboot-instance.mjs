@@ -6,9 +6,10 @@ const REGION = process.env.REGION;
 const ec2Client = new EC2Client({ region: REGION }); // Specify your AWS region from cloud9
 const sesClient = new SESClient({ region: REGION });
 const SENDER_EMAIL = process.env.FROM;
-const RECIPIENTS = process.env.TO.split(','); 
+const RECIPIENTS = null; 
 
 export const rebootInstanceHandler = async (event, context) => {
+    RECIPIENTS = event.Use.email;   
     const instance = event.Use.Instance;
     const instanceId = instance.InstanceId
     const instanceName = instance.InstanceName
