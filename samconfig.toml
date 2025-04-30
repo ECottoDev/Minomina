@@ -16,13 +16,13 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-s3_bucket = "minomina-stacks2"
+s3_bucket = "minomina-stacks"
 region = "us-east-2"
-parameter_overrides = "Region=\"us-east-2\" FromEmail=\"support@cloudium.net\" BucketName=\"status2.minominapr.com\""
+parameter_overrides = "Region=\"us-east-2\" FromEmail=\"support@cloudium.net\" BucketName=\"status.minominapr.com\""
 image_repositories = []
 disable_rollback = true
-s3_prefix = "minomina-stacks2"
-stack_name = "minomina-stacks2"
+s3_prefix = "minomina-stacks"
+stack_name = "minomina-stacks"
 
 [default.package.parameters]
 resolve_s3 = false

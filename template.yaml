@@ -12,7 +12,7 @@ Parameters:
     Default: support@cloudium.net
   BucketName:
     Type: String
-    Default: status2.minominapr.com
+    Default: status.minominapr.com
 Resources:
 
   MinominaQueue:
