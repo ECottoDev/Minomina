@@ -61,7 +61,7 @@ async function handleStartInstance(instanceId, instanceName, RECIPIENTS, event) 
         }
     }}
     
-    async function handleStopInstance(instanceId, instanceName, RECIPIENTS) {
+    async function handleStopInstance(instanceId, instanceName, RECIPIENTS, event) {
     try {
         const commandParams = {
             InstanceIds: [instanceId] // InstanceIds must be an array of instance IDs
@@ -100,7 +100,7 @@ async function handleStartInstance(instanceId, instanceName, RECIPIENTS, event) 
     }
   }
     
-    async function handleRebootInstance(instanceId, instanceName, RECIPIENTS) { 
+    async function handleRebootInstance(instanceId, instanceName, RECIPIENTS, event) { 
     try {
         const commandParams = {
             InstanceIds: [instanceId] // InstanceIds must be an array of instance IDs

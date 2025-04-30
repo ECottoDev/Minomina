@@ -21,11 +21,11 @@ const retryURL = process.env.SQS
 export const handler = async (event, context) => {
     const RECIPIENTS = event.Use.email; 
 
-    await handleDescribeInstances(RECIPIENTS);
-    return retrieveFromTable();
+    await handleDescribeInstances(RECIPIENTS, event);
+    return retrieveFromTable(event);
 };
 
-async function handleDescribeInstances(RECIPIENTS) {
+async function handleDescribeInstances(RECIPIENTS, event) {
   try {
         const command = new DescribeInstancesCommand({});
         const data = await ec2Client.send(command);
@@ -47,7 +47,7 @@ async function handleDescribeInstances(RECIPIENTS) {
 
         const dynamoSorted = (await retrieveFromTable()).sort(minominaCode.sortArrayOfObj("InstanceName"));
         
-        await clearTable();
+        await clearTable(event);
         
         const instances = [];
         for (const reservation of data.Reservations) {
@@ -73,7 +73,7 @@ async function handleDescribeInstances(RECIPIENTS) {
                     LastChecked: day
                 };
                 if (status !== "Terminated" && status !== "terminated") {
-                    await putStatus(instanceDetails);
+                    await putStatus(instanceDetails, event);
                     instances.push(instanceDetails);
                 }
             }
@@ -149,7 +149,7 @@ async function handleDescribeInstances(RECIPIENTS) {
 }
 
 
-async function putStatus(instanceDetails) {
+async function putStatus(instanceDetails, event) {
     
     const instance= {
             InstanceId: instanceDetails.InstanceId,
@@ -185,7 +185,7 @@ async function putStatus(instanceDetails) {
 }
 
 
-async function clearTable() {
+async function clearTable(event) {
     try {
         const scanParams = {
             TableName: tableName,
@@ -222,7 +222,7 @@ async function clearTable() {
     }
 }
 
-async function retrieveFromTable() {
+async function retrieveFromTable(event) {
     try {
         const results = [];
             const params = {
