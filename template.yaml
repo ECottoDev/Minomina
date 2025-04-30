@@ -19,7 +19,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       VisibilityTimeout: 110
-      QueueName: apiFunctionQueue
+      QueueName: MinominaQueue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt MinominaDLQ.Arn
         maxReceiveCount: 1
@@ -111,7 +111,7 @@ Resources:
       - Statement:
             - Effect: Allow
               Action: sqs:SendMessage
-              Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
+              Resource: !GetAtt MinominaQueue.Arn
       - Statement:
             - Effect: Allow
               Action:
@@ -217,7 +217,7 @@ Resources:
       - Statement:
             - Effect: Allow
               Action: sqs:SendMessage
-              Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
+              Resource: !GetAtt MinominaQueue.Arn
       Environment:
         Variables:
           USER_TABLE: !Ref UserTable
@@ -246,7 +246,7 @@ Resources:
       - Statement:
             - Effect: Allow
               Action: sqs:SendMessage
-              Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
+              Resource: !GetAtt MinominaQueue.Arn
       - Statement:
           - Effect: Allow
             Action:
@@ -281,7 +281,7 @@ Resources:
       - Statement:
             - Effect: Allow
               Action: sqs:SendMessage
-              Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
+              Resource: !GetAtt MinominaQueue.Arn
       - Statement:
           - Effect: Allow
             Action:
