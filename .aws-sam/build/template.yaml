@@ -11,44 +11,70 @@ Parameters:
     Default: support@cloudium.net
   BucketName:
     Type: String
-    Default: status.minominapr.com
+    Default: status2.minominapr.com
 Resources:
+  MinominaQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 110
+      QueueName: apiFunctionQueue
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+          - MinominaDLQ
+          - Arn
+        maxReceiveCount: 1
+  MinominaDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: minomina-DLQ
+  MinominaLambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: minomina-layer
+      Description: Common functions
+      ContentUri: ../../layer
+      CompatibleRuntimes:
+      - nodejs20.x
+      RetentionPolicy: Retain
   apiFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: apiFunction
       CodeUri: apiFunction
+      Layers:
+      - Ref: MinominaLambdaLayer
       Handler: src/handlers/API.apiHandler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
       MemorySize: 256
       Timeout: 100
-      Description: null
+      Description: Custom API for Minomina.
       Policies:
       - Statement:
         - Effect: Allow
           Action:
           - lambda:InvokeFunction
           Resource: '*'
+      - SQSPollerPolicy:
+          QueueName: apiFunctionQueue
       Environment:
         Variables:
           REGION:
             Ref: Region
           GET_INSTANCES:
             Ref: updateInfoFunction
-          START_INSTANCES:
-            Ref: startInstanceFunction
-          STOP_INSTANCES:
-            Ref: stopInstanceFunction
-          REBOOT_INSTANCES:
-            Ref: rebootInstanceFunction
+          INSTANCE_MANAGER:
+            Ref: InstanceManagerFunction
           LOGIN:
             Ref: LoginFunction
           LOGOUT:
             Ref: LogoutFunction
           VERIFY:
             Ref: VerifySessionFunction
+          SQS:
+            Ref: MinominaQueue
           ENDPOINT_OVERRIDE: ''
       FunctionUrlConfig:
         AuthType: NONE
@@ -61,6 +87,14 @@ Resources:
           AllowHeaders:
           - '*'
           AllowCredentials: false
+      Events:
+        SQS:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - MinominaQueue
+              - Arn
     Metadata:
       SamResourceId: apiFunction
   updateInfoFunction:
@@ -68,17 +102,25 @@ Resources:
     Properties:
       FunctionName: updateInfoFunction
       CodeUri: updateInfoFunction
-      Handler: src/handlers/updateInfo.handler
+      Layers:
+      - Ref: MinominaLambdaLayer
+      Handler: src/handlers/UpdateInfo.handler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
-      MemorySize: 256
+      MemorySize: 1024
       Timeout: 100
-      Description: null
+      Description: Function that updates tables and returns current EC2 data to frontEnd
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: InstanceTable
+      - SQSSendMessagePolicy:
+          QueueName: RetryQueue
+      - Statement:
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
       - Statement:
         - Effect: Allow
           Action:
@@ -92,6 +134,29 @@ Resources:
       - Statement:
         - Effect: Allow
           Action:
+          - ses:SendEmail
+          - ses:SendRawEmail
+          Resource: '*'
+      - Statement:
+        - Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+          - s3:ListBucket
+          Resource:
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WebSiteBucket
+              - /*
+      - Statement:
+        - Effect: Allow
+          Action:
           - dynamodb:PutItem
           - dynamodb:DescribeTable
           Resource: '*'
@@ -99,109 +164,44 @@ Resources:
         Variables:
           INSTANCE_TABLE:
             Ref: InstanceTable
+          BUCKET:
+            Ref: BucketName
+          FROM:
+            Ref: FromEmail
           REGION:
             Ref: Region
+          SQS:
+            Ref: MinominaQueue
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: updateInfoFunction
-  startInstanceFunction:
+  InstanceManagerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: startInstanceFunction
-      CodeUri: startInstanceFunction
-      Handler: src/handlers/start-instance.startInstanceHandler
+      FunctionName: InstanceManagerFunction
+      CodeUri: InstanceManagerFunction
+      Layers:
+      - Ref: MinominaLambdaLayer
+      Handler: src/handlers/InstanceManager.InstanceHandler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
-      MemorySize: 128
+      MemorySize: 256
       Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
+      Description: Function that Executes Start/Stop/Reboot upon an instance.
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: InstanceTable
+      - Statement:
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
       - Statement:
         - Effect: Allow
           Action:
           - ec2:StartInstances
-          Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - ses:SendEmail
-          - ses:SendRawEmail
-          Resource: '*'
-      Environment:
-        Variables:
-          INSTANCE_TABLE:
-            Ref: InstanceTable
-          REGION:
-            Ref: Region
-          FROM:
-            Ref: FromEmail
-          ENDPOINT_OVERRIDE: ''
-    Metadata:
-      SamResourceId: startInstanceFunction
-  stopInstanceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: stopInstanceFunction
-      CodeUri: stopInstanceFunction
-      Handler: src/handlers/stop-instances.stopInstanceHandler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: InstanceTable
-      - Statement:
-        - Effect: Allow
-          Action:
           - ec2:StopInstances
-          Resource: '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - ses:SendEmail
-          - ses:SendRawEmail
-          Resource: '*'
-      Environment:
-        Variables:
-          INSTANCE_TABLE:
-            Ref: InstanceTable
-          REGION:
-            Ref: Region
-          FROM:
-            Ref: FromEmail
-          ENDPOINT_OVERRIDE: ''
-    Metadata:
-      SamResourceId: stopInstanceFunction
-  rebootInstanceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: rebootInstanceFunction
-      CodeUri: rebootInstanceFunction
-      Handler: src/handlers/reboot-instance.rebootInstanceHandler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: InstanceTable
-      - Statement:
-        - Effect: Allow
-          Action:
           - ec2:RebootInstances
           Resource: '*'
       - Statement:
@@ -216,41 +216,46 @@ Resources:
             Ref: InstanceTable
           REGION:
             Ref: Region
+          SQS:
+            Ref: MinominaQueue
           FROM:
             Ref: FromEmail
           ENDPOINT_OVERRIDE: ''
     Metadata:
-      SamResourceId: rebootInstanceFunction
+      SamResourceId: InstanceManagerFunction
   LoginFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: LoginFunction
       CodeUri: LoginFunction
-      Handler: src/handlers/login.loginHandler
+      Handler: src/handlers/Login.loginHandler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
-      MemorySize: 128
+      MemorySize: 256
       Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
+      Description: Function that Validates user and creates session for user.
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: UserTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SessionTable
       - Statement:
         - Effect: Allow
-          Action:
-          - lambda:InvokeFunction
-          Resource: '*'
+          Action: sqs:SendMessage
+          Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
       Environment:
         Variables:
           USER_TABLE:
             Ref: UserTable
-          LAMBDA_NAME:
-            Ref: SessionInitiatorFunction
+          SESSION_TABLE:
+            Ref: SessionTable
           REGION:
             Ref: Region
+          SQS:
+            Ref: MinominaQueue
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: LoginFunction
@@ -259,14 +264,13 @@ Resources:
     Properties:
       FunctionName: LogoutFunction
       CodeUri: LogoutFunction
-      Handler: src/handlers/logout.logoutHandler
+      Handler: src/handlers/Logout.logoutHandler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
-      MemorySize: 128
+      MemorySize: 256
       Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
+      Description: Function that validates user session and deletes it.
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
@@ -274,6 +278,10 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: SessionTable
+      - Statement:
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
       - Statement:
         - Effect: Allow
           Action:
@@ -288,6 +296,8 @@ Resources:
             Ref: SessionTable
           REGION:
             Ref: Region
+          SQS:
+            Ref: MinominaQueue
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: LogoutFunction
@@ -296,14 +306,13 @@ Resources:
     Properties:
       FunctionName: VerifySessionFunction
       CodeUri: VerifySessionFunction
-      Handler: src/handlers/verify-session.verifySessionHandler
+      Handler: src/handlers/VerifySession.verifySessionHandler
       Runtime: nodejs20.x
       Architectures:
       - x86_64
-      MemorySize: 128
+      MemorySize: 512
       Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
+      Description: Function to verify user and session life.
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
@@ -311,6 +320,10 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: UserTable
+      - Statement:
+        - Effect: Allow
+          Action: sqs:SendMessage
+          Resource: arn:aws:sqs:us-east-2:992382533325:apiFunctionQueue
       - Statement:
         - Effect: Allow
           Action:
@@ -325,40 +338,11 @@ Resources:
             Ref: SessionTable
           REGION:
             Ref: Region
+          SQS:
+            Ref: MinominaQueue
           ENDPOINT_OVERRIDE: ''
     Metadata:
       SamResourceId: VerifySessionFunction
-  SessionInitiatorFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: SessionInitiatorFunction
-      CodeUri: SessionInitiatorFunction
-      Handler: src/handlers/session-initiator.handler
-      Runtime: nodejs20.x
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by
-        id from a DynamoDB table.
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: UserTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - dynamodb:UpdateItem
-          Resource: '*'
-      Environment:
-        Variables:
-          SESSION_TABLE:
-            Ref: SessionTable
-          REGION:
-            Ref: Region
-          ENDPOINT_OVERRIDE: ''
-    Metadata:
-      SamResourceId: SessionInitiatorFunction
   InstanceTable:
     Type: AWS::Serverless::SimpleTable
     Properties:

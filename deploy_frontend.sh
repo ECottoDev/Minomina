@@ -2,9 +2,9 @@
 
 # Get user input for stack name
 # read -p "Enter the name of the CloudFormation stack: " 
-stack_names="minomina-stack"
+stack_names="minomina-stack2"
 
-s3_bucket_name="status.minominapr.com"
+s3_bucket_name="status2.minominapr.com"
 
 # Get the AWS Region from the stack
 aws_region="us-east-2"

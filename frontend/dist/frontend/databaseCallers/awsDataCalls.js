@@ -1,13 +1,14 @@
 import { updateUsernameCookieExpiration } from "../../helpers/basicElements.js";
 import { config } from "../../config.js";
 
-const link = 'https://3pglejwdppysefv2sz5l4m6wqe0ephtt.lambda-url.us-east-2.on.aws/'
+// const link = 'https://3pglejwdppysefv2sz5l4m6wqe0ephtt.lambda-url.us-east-2.on.aws/'
+const link = 'https://bsfev7vemoo63wvpxa7u5o44ui0obxxw.lambda-url.us-east-2.on.aws/'
 
 export async function rebootInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail }, Key: 'reboot' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail, action: 'Reboot' }, Key: 'reboot', Retry: false }),
         });
 
         if (!response.ok) {
@@ -27,7 +28,7 @@ export async function startInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail  }, Key: 'start' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail, action: 'Start'  }, Key: 'start', Retry: false }),
         });
 
         if (!response.ok) {
@@ -47,7 +48,7 @@ export async function stopInstances(Instance) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'PUT', // Change to POST method
-            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail  }, Key: 'stop' }),
+            body: JSON.stringify({ Use:{ Instance, email: config.receiveEmail, action: 'Stop'  }, Key: 'stop', Retry: false }),
         });
 
         if (!response.ok) {
@@ -67,7 +68,7 @@ export async function getInstances() {
         const response = await fetch( link,
         {
             method: 'PUT',
-            body: JSON.stringify({Use:{}, Key:'update' }),
+            body: JSON.stringify({Use:{ email: config.receiveEmail }, Key:'update', Retry: false }),
         });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -96,11 +97,11 @@ export async function login(username, pass, success = () => { }, fail = () => { 
         throw new Error(errorMessage);
     }
     
-    const password = simpleEncrypt(pass)
+    const password = simpleEncrypt(pass);
     try {
         const response = await fetch(link, {
             method: 'POST',
-            body: JSON.stringify({ Use: {username, password}, Key: 'login' })
+            body: JSON.stringify({ Use: {username, password}, Key: 'login', Retry: false })
         });
 
         if (!response.ok) {
@@ -128,7 +129,7 @@ export async function verifySession(username) {
     try {
         const response = await fetch( link, {
             method: 'POST',
-            body: JSON.stringify({ Use:{username}, Key: 'verify'  })
+            body: JSON.stringify({ Use:{username}, Key: 'verify', Retry: false  })
         });
         if (!response.ok) {
             // throw new Error(`Failed to verify session. HTTP status: ${response.status}`);
@@ -146,7 +147,7 @@ export async function logout(user) {
     try {
         const response = await fetch( link, {//update to new link from lambda
             method: 'POST', // Change to POST method
-            body: JSON.stringify({ username: user }),
+            body: JSON.stringify({ Use: { username: user}, Key:'logout', Retry: false }),
         });
 
         if (!response.ok) {
